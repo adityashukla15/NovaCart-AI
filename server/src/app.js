@@ -7,6 +7,8 @@ const app=express()
 const errrorHandler=require('./middlewares/errorHandler.js')
 const authRoutes=require('../src/routes/auth.routes.js')
 const productRoutes=require('../src/routes/product.routes.js')
+const categoryRoutes=require('../src/routes/category.routes.js')
+
 app.use(cors({
     origin:'http://localhost:5173',
     credentials:true
@@ -26,6 +28,7 @@ app.get("/api/health", (req, res) => {
 
 app.use('/api/auth',authRoutes)
 app.use('/api/products',productRoutes)
+app.use('/api/categories',categoryRoutes)
 
 app.use(errrorHandler)
 
