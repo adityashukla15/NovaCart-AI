@@ -16,12 +16,12 @@ const createProduct = asyncHandler(async (req, res) => {
         price,
         discountPrice,
         stock,
-        images,
         sizes,
         colors,
         isFeatured,
     } = req.body;
 
+    // Validation
     if (
         !title ||
         !description ||
@@ -32,23 +32,41 @@ const createProduct = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All required fields are mandatory");
     }
 
+    // Check category exists
     const existingCategory = await Category.findById(category);
 
     if (!existingCategory) {
         throw new ApiError(404, "Category not found");
     }
 
+    // Generate slug
     const slug = title
         .trim()
         .toLowerCase()
         .replace(/\s+/g, "-");
 
+    // Check duplicate product
     const existingProduct = await Product.findOne({ slug });
 
     if (existingProduct) {
         throw new ApiError(400, "Product already exists");
     }
 
+    // Get Cloudinary image URLs
+    const imageUrls = req.files
+        ? req.files.map(file => file.path)
+        : [];
+
+    // Handle arrays from form-data
+    const parsedSizes = sizes
+        ? (Array.isArray(sizes) ? sizes : sizes.split(",").map(item => item.trim()))
+        : [];
+
+    const parsedColors = colors
+        ? (Array.isArray(colors) ? colors : colors.split(",").map(item => item.trim()))
+        : [];
+
+    // Create Product
     const product = await Product.create({
 
         title,
@@ -67,34 +85,28 @@ const createProduct = asyncHandler(async (req, res) => {
 
         stock,
 
-        images,
+        images: imageUrls,
 
-        sizes,
+        sizes: parsedSizes,
 
-        colors,
+        colors: parsedColors,
 
-        isFeatured,
+        isFeatured: isFeatured === "true" || isFeatured === true,
 
         createdBy: req.user._id,
 
     });
 
     const populatedProduct = await Product.findById(product._id)
-
         .populate("category", "name slug image")
-
         .populate("createdBy", "name email");
 
     return res.status(201).json(
 
         new ApiResponse(
-
             201,
-
             "Product created successfully",
-
             populatedProduct
-
         )
 
     );

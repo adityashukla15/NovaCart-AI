@@ -4,7 +4,7 @@ const router=express.Router()
 
 const authMiddleware=require('../middlewares/auth.middleware')
 const adminMiddleware=require('../middlewares/admin.middleware')
-
+const upload=require('../middlewares/upload.middleware')
 const {
     createProduct,
     getAllProducts,
@@ -17,6 +17,7 @@ router.post(
     "/create-product",
     authMiddleware,
     adminMiddleware,
+    upload.array("images",5),
     createProduct
 );
 
