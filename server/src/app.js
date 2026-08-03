@@ -9,6 +9,8 @@ const authRoutes=require('../src/routes/auth.routes.js')
 const productRoutes=require('../src/routes/product.routes.js')
 const categoryRoutes=require('../src/routes/category.routes.js')
 const wishlistRoutes=require('../src/routes/wishlist.routes.js')
+const cartRoutes=require('../src/routes/cart.routes.js')
+const addressRoutes=require('../src/routes/address.routes.js')
 
 app.use(cors({
     origin:'http://localhost:5173',
@@ -31,6 +33,8 @@ app.use('/api/auth',authRoutes)
 app.use('/api/products',productRoutes)
 app.use('/api/categories',categoryRoutes)
 app.use('/api/wishlist',wishlistRoutes)
+app.use('/api/cart',cartRoutes)
+app.use('/api/address',addressRoutes)
 
 app.use(errrorHandler)
 
