@@ -1,4 +1,6 @@
 const Product = require("../models/product.model");
+const Category = require("../models/category.model");
+const Review = require("../models/review.model");
 
 const ApiError = require("../utils/apiError");
 const ApiResponse = require("../utils/apiResponse");
@@ -21,7 +23,7 @@ const createProduct = asyncHandler(async (req, res) => {
         isFeatured,
     } = req.body;
 
-    // Validation
+    // Required Fields
     if (
         !title ||
         !description ||
@@ -32,41 +34,73 @@ const createProduct = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All required fields are mandatory");
     }
 
-    // Check category exists
+    // Check Category
     const existingCategory = await Category.findById(category);
 
     if (!existingCategory) {
         throw new ApiError(404, "Category not found");
     }
 
-    // Generate slug
+    // Validate Price
+    if (Number(price) <= 0) {
+        throw new ApiError(400, "Price must be greater than 0");
+    }
+
+    // Validate Discount
+    if (
+        discountPrice &&
+        Number(discountPrice) >= Number(price)
+    ) {
+        throw new ApiError(
+            400,
+            "Discount price must be less than actual price"
+        );
+    }
+
+    // Validate Stock
+    if (Number(stock) < 0) {
+        throw new ApiError(
+            400,
+            "Stock cannot be negative"
+        );
+    }
+
+    // Generate Slug
     const slug = title
         .trim()
         .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
         .replace(/\s+/g, "-");
 
-    // Check duplicate product
+    // Duplicate Product
     const existingProduct = await Product.findOne({ slug });
 
     if (existingProduct) {
-        throw new ApiError(400, "Product already exists");
+        throw new ApiError(
+            400,
+            "Product already exists"
+        );
     }
 
-    // Get Cloudinary image URLs
+    // Cloudinary Images
     const imageUrls = req.files
         ? req.files.map(file => file.path)
         : [];
 
-    // Handle arrays from form-data
+    // Sizes
     const parsedSizes = sizes
-        ? (Array.isArray(sizes) ? sizes : sizes.split(",").map(item => item.trim()))
+        ? Array.isArray(sizes)
+            ? sizes
+            : sizes.split(",").map(item => item.trim())
         : [];
 
+    // Colors
     const parsedColors = colors
-        ? (Array.isArray(colors) ? colors : colors.split(",").map(item => item.trim()))
+        ? Array.isArray(colors)
+            ? colors
+            : colors.split(",").map(item => item.trim())
         : [];
 
-    // Create Product
     const product = await Product.create({
 
         title,
@@ -91,22 +125,34 @@ const createProduct = asyncHandler(async (req, res) => {
 
         colors: parsedColors,
 
-        isFeatured: isFeatured === "true" || isFeatured === true,
+        isFeatured:
+            isFeatured === true ||
+            isFeatured === "true",
+
+        averageRating: 0,
+
+        totalReviews: 0,
 
         createdBy: req.user._id,
 
     });
 
     const populatedProduct = await Product.findById(product._id)
+
         .populate("category", "name slug image")
+
         .populate("createdBy", "name email");
 
     return res.status(201).json(
 
         new ApiResponse(
+
             201,
+
             "Product created successfully",
+
             populatedProduct
+
         )
 
     );
@@ -121,58 +167,131 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const getAllProducts = asyncHandler(async (req, res) => {
 
-    const page = Number(req.query.page) || 1;
-
-    const limit = Number(req.query.limit) || 10;
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const search = req.query.search || "";
+    const {
+        search,
+        category,
+        featured,
+        minPrice,
+        maxPrice,
+        minRating,
+        inStock,
+        sort,
+    } = req.query;
 
-    const category = req.query.category || "";
+    let filter = {isDeleted: false,};
 
-    const featured = req.query.featured;
-
-    const minPrice = Number(req.query.minPrice) || 0;
-
-    const maxPrice = Number(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
-
-    const sort = req.query.sort || "-createdAt";
-
-
-    let filter = {};
-
+    // Search by title & brand
     if (search) {
 
-        filter.title = {
+        filter.$or = [
 
-            $regex: search,
+            {
+                title: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
 
-            $options: "i",
+            {
+                brand: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
 
-        };
+        ];
 
     }
 
+    // Category
     if (category) {
 
         filter.category = category;
 
     }
 
+    // Featured
     if (featured !== undefined) {
 
         filter.isFeatured = featured === "true";
 
     }
 
-    filter.price = {
+    // Price Range
+    if (minPrice || maxPrice) {
 
-        $gte: minPrice,
+        filter.price = {};
 
-        $lte: maxPrice,
+        if (minPrice)
+            filter.price.$gte = Number(minPrice);
 
+        if (maxPrice)
+            filter.price.$lte = Number(maxPrice);
+
+    }
+
+    // Rating Filter
+    if (minRating) {
+
+        filter.averageRating = {
+
+            $gte: Number(minRating),
+
+        };
+
+    }
+
+    // Stock Filter
+    if (inStock === "true") {
+
+        filter.stock = {
+
+            $gt: 0,
+
+        };
+
+    }
+
+    let sortOption = {
+        createdAt: -1,
     };
+
+    switch (sort) {
+
+        case "priceLow":
+            sortOption = {
+                price: 1,
+            };
+            break;
+
+        case "priceHigh":
+            sortOption = {
+                price: -1,
+            };
+            break;
+
+        case "rating":
+            sortOption = {
+                averageRating: -1,
+            };
+            break;
+
+        case "oldest":
+            sortOption = {
+                createdAt: 1,
+            };
+            break;
+
+        default:
+            sortOption = {
+                createdAt: -1,
+            };
+
+    }
 
     const totalProducts = await Product.countDocuments(filter);
 
@@ -182,11 +301,43 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
         .populate("createdBy", "name email")
 
-        .sort(sort)
+        .sort(sortOption)
 
         .skip(skip)
 
-        .limit(limit);
+        .limit(limit)
+
+        .lean();
+
+    const updatedProducts = products.map(product => ({
+
+        ...product,
+
+        discountPercentage:
+
+            product.discountPrice
+
+                ? Math.round(
+
+                      ((product.price - product.discountPrice) /
+
+                          product.price) *
+
+                          100
+
+                  )
+
+                : 0,
+
+        stockStatus:
+
+            product.stock > 0
+
+                ? "In Stock"
+
+                : "Out Of Stock",
+
+    }));
 
     return res.status(200).json(
 
@@ -198,7 +349,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
             {
 
-                products,
+                products: updatedProducts,
 
                 currentPage: page,
 
@@ -206,7 +357,9 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
                 totalProducts,
 
-                hasNextPage: page < Math.ceil(totalProducts / limit),
+                hasNextPage:
+
+                    page < Math.ceil(totalProducts / limit),
 
                 hasPrevPage: page > 1,
 
@@ -218,27 +371,83 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
 });
 
-
-
-// ==============================
-// GET PRODUCT BY ID
-// ==============================
-
 const getProductById = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
 
-    const product = await Product.findById(id)
-
+    const product = await Product.findOne({ _id: id, isDeleted: false })
         .populate("category", "name slug image")
-
-        .populate("createdBy", "name email");
+        .populate("createdBy", "name email")
+        .lean();
 
     if (!product) {
-
         throw new ApiError(404, "Product not found");
-
     }
+
+    // Latest Reviews
+    const reviews = await Review.find({
+        product: id,
+    })
+        .populate("user", "name")
+        .sort({
+            createdAt: -1,
+        })
+        .limit(5);
+
+    // Similar Products
+    const similarProducts = await Product.find({
+
+        category: product.category._id,
+
+        _id: {
+            $ne: product._id,
+        },
+
+    })
+
+        .select(
+            "title slug images price discountPrice averageRating totalReviews stock"
+        )
+
+        .limit(4)
+
+        .lean();
+
+    const updatedSimilarProducts = similarProducts.map(item => ({
+
+        ...item,
+
+        discountPercentage:
+            item.discountPrice
+                ? Math.round(
+                    ((item.price - item.discountPrice) /
+                        item.price) *
+                    100
+                )
+                : 0,
+
+        stockStatus:
+            item.stock > 0
+                ? "In Stock"
+                : "Out Of Stock",
+
+    }));
+
+    // Product Discount
+    product.discountPercentage =
+        product.discountPrice
+            ? Math.round(
+                ((product.price - product.discountPrice) /
+                    product.price) *
+                100
+            )
+            : 0;
+
+    // Stock Status
+    product.stockStatus =
+        product.stock > 0
+            ? "In Stock"
+            : "Out Of Stock";
 
     return res.status(200).json(
 
@@ -248,7 +457,15 @@ const getProductById = asyncHandler(async (req, res) => {
 
             "Product fetched successfully",
 
-            product
+            {
+
+                product,
+
+                reviews,
+
+                similarProducts: updatedSimilarProducts,
+
+            }
 
         )
 
@@ -266,55 +483,153 @@ const updateProduct = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
 
-    if (req.body.category) {
+    const product = await Product.findById(id);
 
-        const category = await Category.findById(req.body.category);
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
 
-        if (!category) {
+    const {
+        title,
+        description,
+        category,
+        brand,
+        price,
+        discountPrice,
+        stock,
+        sizes,
+        colors,
+        isFeatured,
+    } = req.body;
 
+    // Category Validation
+    if (category) {
+
+        const existingCategory = await Category.findById(category);
+
+        if (!existingCategory) {
             throw new ApiError(404, "Category not found");
+        }
+
+        product.category = category;
+    }
+
+    // Price Validation
+    if (price !== undefined) {
+
+        if (Number(price) <= 0) {
+            throw new ApiError(400, "Price must be greater than 0");
+        }
+
+        product.price = Number(price);
+    }
+
+    // Discount Validation
+    if (discountPrice !== undefined) {
+
+        const actualPrice = price
+            ? Number(price)
+            : product.price;
+
+        if (Number(discountPrice) >= actualPrice) {
+
+            throw new ApiError(
+                400,
+                "Discount price must be less than actual price"
+            );
 
         }
 
+        product.discountPrice = Number(discountPrice);
     }
 
-    if (req.body.title) {
+    // Stock Validation
+    if (stock !== undefined) {
 
-        req.body.slug = req.body.title
+        if (Number(stock) < 0) {
 
+            throw new ApiError(
+                400,
+                "Stock cannot be negative"
+            );
+
+        }
+
+        product.stock = Number(stock);
+    }
+
+    // Title & Slug
+    if (title) {
+
+        const slug = title
             .trim()
-
             .toLowerCase()
-
+            .replace(/[^\w\s-]/g, "")
             .replace(/\s+/g, "-");
 
-    }
+        const existingSlug = await Product.findOne({
+            slug,
+            _id: { $ne: id },
+        });
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-
-        id,
-
-        req.body,
-
-        {
-
-            new: true,
-
-            runValidators: true,
-
+        if (existingSlug) {
+            throw new ApiError(
+                400,
+                "Another product with same title already exists"
+            );
         }
 
-    )
+        product.title = title;
+        product.slug = slug;
+    }
 
-        .populate("category", "name slug image")
+    if (description) {
+        product.description = description;
+    }
 
-        .populate("createdBy", "name email");
+    if (brand) {
+        product.brand = brand;
+    }
 
-    if (!updatedProduct) {
+    // Cloudinary Images
+    if (req.files && req.files.length > 0) {
 
-        throw new ApiError(404, "Product not found");
+        product.images = req.files.map(file => file.path);
 
     }
+
+    // Sizes
+    if (sizes) {
+
+        product.sizes = Array.isArray(sizes)
+            ? sizes
+            : sizes.split(",").map(item => item.trim());
+
+    }
+
+    // Colors
+    if (colors) {
+
+        product.colors = Array.isArray(colors)
+            ? colors
+            : colors.split(",").map(item => item.trim());
+
+    }
+
+    // Featured
+    if (isFeatured !== undefined) {
+
+        product.isFeatured =
+            isFeatured === true ||
+            isFeatured === "true";
+
+    }
+
+    await product.save();
+
+    const updatedProduct = await Product.findById(product._id)
+        .populate("category", "name slug image")
+        .populate("createdBy", "name email");
 
     return res.status(200).json(
 
@@ -342,13 +657,37 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
 
-    const deletedProduct = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id);
 
-    if (!deletedProduct) {
+    if (!product) {
 
-        throw new ApiError(404, "Product not found");
+        throw new ApiError(
+
+            404,
+
+            "Product not found"
+
+        );
 
     }
+
+    if (product.isDeleted) {
+
+        throw new ApiError(
+
+            400,
+
+            "Product already deleted"
+
+        );
+
+    }
+
+    product.isDeleted = true;
+
+    product.deletedAt = new Date();
+
+    await product.save();
 
     return res.status(200).json(
 
@@ -357,6 +696,46 @@ const deleteProduct = asyncHandler(async (req, res) => {
             200,
 
             "Product deleted successfully"
+
+        )
+
+    );
+
+});
+
+const restoreProduct = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+
+        throw new ApiError(
+
+            404,
+
+            "Product not found"
+
+        );
+
+    }
+
+    product.isDeleted = false;
+
+    product.deletedAt = null;
+
+    await product.save();
+
+    return res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Product restored successfully",
+
+            product
 
         )
 
@@ -376,5 +755,7 @@ module.exports = {
     updateProduct,
 
     deleteProduct,
+
+    restoreProduct,
 
 };

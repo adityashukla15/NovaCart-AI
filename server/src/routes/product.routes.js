@@ -11,6 +11,7 @@ const {
     getProductById,
     updateProduct,
     deleteProduct,
+    restoreProduct,
 } = require("../controllers/product.controller");
 
 router.post(
@@ -38,5 +39,14 @@ router.delete(
     adminMiddleware,
     deleteProduct
 );
+
+router.patch(
+    "/restore-product/:id",
+    authMiddleware,
+    adminMiddleware,
+    restoreProduct
+);
+
+
 
 module.exports = router;

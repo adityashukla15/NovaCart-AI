@@ -23,6 +23,21 @@
     ref: "Category",
     required: true,
 },
+averageRating:{
+
+    type:Number,
+
+    default:0,
+
+},
+
+totalReviews:{
+
+    type:Number,
+
+    default:0,
+
+},
 
     brand: {
         type: String,
@@ -81,7 +96,16 @@
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-    }
+    },
+    isDeleted: {
+    type: Boolean,
+    default: false,
+},
+
+deletedAt: {
+    type: Date,
+    default: null,
+},
 
  },{timestamps:true})
 

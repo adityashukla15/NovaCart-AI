@@ -11,6 +11,8 @@ const categoryRoutes=require('../src/routes/category.routes.js')
 const wishlistRoutes=require('../src/routes/wishlist.routes.js')
 const cartRoutes=require('../src/routes/cart.routes.js')
 const addressRoutes=require('../src/routes/address.routes.js')
+const orderRoutes=require('../src/routes/order.routes.js')
+const reviewRoutes=require('../src/routes/review.routes.js')
 
 app.use(cors({
     origin:'http://localhost:5173',
@@ -35,6 +37,8 @@ app.use('/api/categories',categoryRoutes)
 app.use('/api/wishlist',wishlistRoutes)
 app.use('/api/cart',cartRoutes)
 app.use('/api/address',addressRoutes)
+app.use('/api/orders',orderRoutes)
+app.use('/api/reviews',reviewRoutes)
 
 app.use(errrorHandler)
 
