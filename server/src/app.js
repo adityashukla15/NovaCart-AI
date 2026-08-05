@@ -13,6 +13,7 @@ const cartRoutes=require('../src/routes/cart.routes.js')
 const addressRoutes=require('../src/routes/address.routes.js')
 const orderRoutes=require('../src/routes/order.routes.js')
 const reviewRoutes=require('../src/routes/review.routes.js')
+const aiRoutes=require('../src/routes/ai.routes.js')
 
 app.use(cors({
     origin:'http://localhost:5173',
@@ -39,6 +40,7 @@ app.use('/api/cart',cartRoutes)
 app.use('/api/address',addressRoutes)
 app.use('/api/orders',orderRoutes)
 app.use('/api/reviews',reviewRoutes)
+app.use('/api/ai',aiRoutes)
 
 app.use(errrorHandler)
 

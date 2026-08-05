@@ -31,14 +31,6 @@ averageRating:{
 
 },
 
-totalReviews:{
-
-    type:Number,
-
-    default:0,
-
-},
-
     brand: {
         type: String,
         default: "",
