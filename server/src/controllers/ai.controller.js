@@ -161,45 +161,6 @@ const smartSearch = asyncHandler(async (req, res) => {
 
     console.log("AI Filters =>", filters);
     console.log("Mongo Filter =>", mongoFilter);
-    console.log("========== DEBUG ==========");
-
-console.log("Total Products:",
-    await Product.countDocuments()
-);
-
-console.log("All Products:");
-console.log(
-    JSON.stringify(
-        await Product.find().populate("category"),
-        null,
-        2
-    )
-);
-
-console.log("Products with isDeleted=false:");
-console.log(
-    JSON.stringify(
-        await Product.find({ isDeleted: false }),
-        null,
-        2
-    )
-);
-
-console.log("Products with Black color:");
-console.log(
-    JSON.stringify(
-        await Product.find({
-            colors: {
-                $regex: "black",
-                $options: "i"
-            }
-        }),
-        null,
-        2
-    )
-);
-
-console.log("===========================");
 
     let products = await Product.find(mongoFilter)
         .populate("category", "name slug")
