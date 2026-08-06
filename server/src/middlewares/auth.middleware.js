@@ -7,7 +7,15 @@ const asyncHandler = require("../utils/asyncHandler");
 const authMiddleware = asyncHandler(async (req, res, next) => {
 
     // Cookie se token nikalo
-    const token = req.cookies.token;
+    let token = req.cookies?.token;
+
+if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+}
+
+if (!token) {
+    throw new ApiError(401, "Unauthorized. Please login first.");
+}
 
     if (!token) {
         throw new ApiError(401, "Unauthorized. Please login first.");
