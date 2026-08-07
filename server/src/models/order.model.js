@@ -1,143 +1,128 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema({
-
-    orderId:{
-
-        type:String,
-
-        unique:true,
-
-        required:true,
-
+const orderSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: String,
+      unique: true,
+      required: true,
     },
 
-    user:{
-
-        type:mongoose.Schema.Types.ObjectId,
-
-        ref:"User",
-
-        required:true,
-
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
 
     items: [
-  {
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
-    title: String,
-    slug: String,
-    image: String,
-    price: Number,
-    quantity: Number,
-    subtotal: Number,
-  }
-],
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+
+        title: {
+          type: String,
+          required: true,
+        },
+
+        slug: String,
+
+        image: String,
+
+        price: {
+          type: Number,
+          required: true,
+        },
+
+        quantity: {
+          type: Number,
+          required: true,
+        },
+
+        subtotal: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
 
     shippingAddress: {
-
-    fullName: {
+      fullName: {
         type: String,
         required: true,
-    },
+      },
 
-    phone: {
+      phone: {
         type: String,
         required: true,
-    },
+      },
 
-    addressLine1: {
+      addressLine1: {
         type: String,
         required: true,
-    },
+      },
 
-    addressLine2: {
+      addressLine2: {
         type: String,
         default: "",
-    },
+      },
 
-    city: {
+      city: {
         type: String,
         required: true,
-    },
+      },
 
-    state: {
+      state: {
         type: String,
         required: true,
-    },
+      },
 
-    postalCode: {
+      postalCode: {
         type: String,
         required: true,
-    },
+      },
 
-    country: {
+      country: {
         type: String,
         required: true,
-    }
-
-},
-
-    totalAmount:{
-
-        type:Number,
-
-        required:true,
-
+      },
     },
 
-    paymentMethod:{
-
-        type:String,
-
-        enum:["COD","CARD","UPI","NETBANKING"],
-
-        default:"COD",
-
+    totalAmount: {
+      type: Number,
+      required: true,
     },
 
-    paymentStatus:{
-
-        type:String,
-
-        enum:["Pending","Paid"],
-
-        default:"Paid",
-
+    paymentMethod: {
+      type: String,
+      enum: ["COD", "CARD", "UPI", "NETBANKING"],
+      default: "COD",
     },
 
-    orderStatus:{
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
+      default: "Pending",
+    },
 
-        type:String,
+    orderStatus: {
+      type: String,
+      enum: [
+        "Pending",
+        "Confirmed",
+        "Packed",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+      ],
+      default: "Pending",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-        enum:[
-
-            "Pending",
-
-            "Confirmed",
-
-            "Packed",
-
-            "Shipped",
-
-            "Delivered",
-
-            "Cancelled"
-
-        ],
-
-        default:"Pending",
-
-    }
-
-},{
-
-    timestamps:true,
-
-});
-
-module.exports=mongoose.model("Order",orderSchema);
+module.exports = mongoose.model("Order", orderSchema);

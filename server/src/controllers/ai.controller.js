@@ -3,6 +3,8 @@ const aiPrompt = require("../utils/aiPrompt");
 const chatPrompt=require("../utils/chatPrompt");
 const comparePrompt=require("../utils/comparePrompt");
 const summaryPrompt=require("../utils/summaryPrompt");
+const outfitPrompt=require("../utils/outfitPrompt");
+const imageSearchPrompt=require("../utils/imageSearchPrompt");
 
 const Product = require("../models/product.model");
 const Category = require("../models/category.model");
@@ -720,6 +722,372 @@ Never invent information.
 
 });
 
+const outfitRecommendation = asyncHandler(async (req, res) => {
+
+    const { message } = req.body;
+
+    if (!message) {
+        throw new ApiError(400, "Message is required");
+    }
+
+    // ==============================
+    // STEP 1 -> AI Extract Outfit Filters
+    // ==============================
+
+    const aiResponse = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        temperature: 0,
+
+        messages: [
+
+            {
+                role: "system",
+                content: outfitPrompt,
+            },
+
+            {
+                role: "user",
+                content: message,
+            },
+
+        ],
+
+    });
+
+    let filters;
+
+    try {
+
+        filters = JSON.parse(
+
+            aiResponse.choices[0].message.content
+                .replace(/```json/g, "")
+                .replace(/```/g, "")
+                .trim()
+
+        );
+
+    } catch {
+
+        throw new ApiError(500, "AI returned invalid JSON");
+
+    }
+
+    // ==============================
+    // STEP 2 -> Search Products
+    // ==============================
+
+    const outfit = {};
+
+    for (const categoryName of filters.categories) {
+
+        const mappedCategory =
+            categoryMap[categoryName.toLowerCase()] ||
+            categoryName;
+
+        const category = await Category.findOne({
+
+            name: {
+
+                $regex: `^${mappedCategory}$`,
+                $options: "i",
+
+            }
+
+        });
+
+        if (!category) continue;
+
+        const mongoFilter = {
+
+            category: category._id,
+
+            isDeleted: false,
+
+        };
+
+        // Budget
+        if (filters.budget && filters.budget > 0) {
+
+            mongoFilter.discountPrice = {
+
+                $lte: filters.budget,
+
+            };
+
+        }
+
+        // Color
+        if (filters.color) {
+
+            mongoFilter.colors = {
+
+                $regex: filters.color,
+
+                $options: "i",
+
+            };
+
+        }
+
+        const product = await Product.findOne(mongoFilter)
+
+            .sort({
+
+                rating: -1,
+
+                discountPrice: 1,
+
+            })
+
+            .populate("category", "name");
+
+        if (product) {
+
+            outfit[category.name] = product;
+
+        }
+
+    }
+
+    let totalPrice = 0;
+
+Object.values(outfit).forEach((product) => {
+
+    totalPrice += product.discountPrice || product.price;
+
+});
+
+    // ==============================
+    // STEP 3 -> AI Recommendation
+    // ==============================
+
+    const recommendation = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        temperature: 0.4,
+
+        messages: [
+
+            {
+
+                role: "system",
+
+                content: `
+You are an AI Fashion Stylist.
+
+Recommend the outfit using ONLY the provided products.
+
+Mention:
+
+- Why this outfit is good
+- Which occasion it suits
+- Style tips
+- Total Outfit Overview
+
+Never invent products.
+
+Keep the response friendly.
+`
+
+            },
+
+            {
+
+                role: "user",
+
+                content:
+
+`User Query:
+
+${message}
+
+Selected Outfit:
+
+${JSON.stringify(outfit)}
+`
+
+            }
+
+        ]
+
+    });
+
+    return res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Outfit recommendation generated",
+
+            {
+
+                filters,
+
+                outfit,
+
+                recommendation:
+                    recommendation.choices[0].message.content,
+
+            }
+
+        )
+
+    );
+
+});
+
+const imageSearch = asyncHandler(async (req, res) => {
+
+    const { message } = req.body;
+
+    if (!message) {
+        throw new ApiError(400, "Message is required");
+    }
+
+    // ==========================
+    // AI Extract Filters
+    // ==========================
+
+    const aiResponse = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        temperature: 0,
+
+        messages: [
+
+            {
+                role: "system",
+                content: imageSearchPrompt,
+            },
+
+            {
+                role: "user",
+                content: message,
+            },
+
+        ],
+
+    });
+
+    let filters;
+
+    try {
+
+        filters = JSON.parse(
+
+            aiResponse.choices[0].message.content
+                .replace(/```json/g, "")
+                .replace(/```/g, "")
+                .trim()
+
+        );
+
+    } catch {
+
+        throw new ApiError(500, "AI returned invalid JSON");
+
+    }
+
+    const mongoFilter = {
+        isDeleted: false,
+    };
+
+    // Brand
+
+    if (filters.brand) {
+
+        mongoFilter.brand = {
+
+            $regex: filters.brand,
+
+            $options: "i",
+
+        };
+
+    }
+
+    // Color
+
+    if (filters.color) {
+
+        mongoFilter.colors = {
+
+            $regex: filters.color,
+
+            $options: "i",
+
+        };
+
+    }
+
+    // Category
+
+    if (filters.category) {
+
+        const mappedCategory =
+            categoryMap[filters.category.toLowerCase()] ||
+            filters.category;
+
+        const category = await Category.findOne({
+
+            name: {
+
+                $regex: `^${mappedCategory}$`,
+
+                $options: "i",
+
+            }
+
+        });
+
+        if (category) {
+
+            mongoFilter.category = category._id;
+
+        }
+
+    }
+
+    // Search Products
+
+    const products = await Product.find(mongoFilter)
+
+        .populate("category", "name")
+
+        .select("title images price discountPrice brand colors category")
+
+        .limit(20);
+
+    return res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Image search completed",
+
+            {
+
+                filters,
+
+                totalResults: products.length,
+
+                products,
+
+            }
+
+        )
+
+    );
+
+});
+
 module.exports = {
     smartSearch,
     chatWithAI,
@@ -727,5 +1095,7 @@ module.exports = {
     clearChat,
     compareProducts,
     productSummary,
+    outfitRecommendation,
+    imageSearch,
     
 };
