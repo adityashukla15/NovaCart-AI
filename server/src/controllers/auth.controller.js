@@ -2,7 +2,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user.model");
+const OTP = require("../models/otp.model");
 
+const sendEmail = require("../utils/sendEmail");
 const ApiError = require("../utils/apiError");
 const ApiResponse = require("../utils/apiResponse");
 const asyncHandler = require("../utils/asyncHandler")
@@ -139,9 +141,271 @@ const me = asyncHandler(async (req, res) => {
 
 });
 
+// ======================================
+// FORGOT PASSWORD
+// ======================================
+
+const forgotPassword = asyncHandler(async (req, res) => {
+
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(
+            400,
+            "Email is required"
+        );
+    }
+
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
+
+    const user = await User.findOne({
+        email: normalizedEmail,
+    });
+
+    // Security: don't reveal whether account exists
+    if (!user) {
+
+        return res.status(200).json(
+
+            new ApiResponse(
+                200,
+                "If an account exists, an OTP has been sent"
+            )
+
+        );
+
+    }
+
+    // Delete previous OTP
+    await OTP.deleteMany({
+        email: normalizedEmail,
+        purpose: "forgot-password",
+    });
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(
+        100000 + Math.random() * 900000
+    ).toString();
+
+    // OTP valid for 5 minutes
+    const expiresAt = new Date(
+        Date.now() + 5 * 60 * 1000
+    );
+
+    await OTP.create({
+
+        email: normalizedEmail,
+
+        otp,
+
+        purpose: "forgot-password",
+
+        expiresAt,
+
+    });
+
+    await sendEmail(
+
+        normalizedEmail,
+
+        "NovaCart - Password Reset OTP",
+
+        `Your NovaCart password reset OTP is ${otp}.
+
+This OTP is valid for 5 minutes.
+
+If you did not request a password reset, please ignore this email.`
+
+    );
+
+    return res.status(200).json(
+
+        new ApiResponse(
+            200,
+            "OTP sent successfully"
+        )
+
+    );
+
+});
+
+// ======================================
+// VERIFY FORGOT PASSWORD OTP
+// ======================================
+
+const verifyForgotPasswordOTP = asyncHandler(
+    async (req, res) => {
+
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            throw new ApiError(
+                400,
+                "Email and OTP are required"
+            );
+        }
+
+        const normalizedEmail = email
+            .trim()
+            .toLowerCase();
+
+        const otpRecord = await OTP.findOne({
+            email: normalizedEmail,
+            purpose: "forgot-password",
+        }).sort({
+            createdAt: -1,
+        });
+
+        if (!otpRecord) {
+            throw new ApiError(
+                400,
+                "OTP not found or expired"
+            );
+        }
+
+        // Check expiry
+        if (
+            new Date() >
+            otpRecord.expiresAt
+        ) {
+
+            await otpRecord.deleteOne();
+
+            throw new ApiError(
+                400,
+                "OTP has expired"
+            );
+
+        }
+
+        // Check OTP
+        if (otpRecord.otp !== otp.toString()) {
+
+            throw new ApiError(
+                400,
+                "Invalid OTP"
+            );
+
+        }
+        otpRecord.verified = true;
+
+        await otpRecord.save();
+
+        return res.status(200).json(
+
+            new ApiResponse(
+                200,
+                "OTP verified successfully"
+            )
+
+        );
+
+    }
+);
+
+// ======================================
+// RESET PASSWORD
+// ======================================
+
+const resetPassword = asyncHandler(
+    async (req, res) => {
+
+        const {
+            email,
+            newPassword,
+        } = req.body;
+
+        if (!email || !newPassword) {
+            throw new ApiError(
+                400,
+                "Email and new password are required"
+            );
+        }
+
+        if (newPassword.length < 6) {
+            throw new ApiError(
+                400,
+                "Password must be at least 6 characters"
+            );
+        }
+
+        const normalizedEmail = email
+            .trim()
+            .toLowerCase();
+
+        const otpRecord = await OTP.findOne({
+            email: normalizedEmail,
+            purpose: "forgot-password",
+            verified: true,
+        }).sort({
+            createdAt: -1,
+        });
+
+        if (!otpRecord) {
+            throw new ApiError(
+                400,
+                "Please verify OTP first"
+            );
+        }
+
+        // Check expiry again
+        if (
+            new Date() >
+            otpRecord.expiresAt
+        ) {
+
+            await otpRecord.deleteOne();
+
+            throw new ApiError(
+                400,
+                "OTP has expired"
+            );
+
+        }
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (!user) {
+            throw new ApiError(
+                404,
+                "User not found"
+            );
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            10
+        );
+
+        user.password = hashedPassword;
+
+        await user.save();
+
+        // OTP can no longer be reused
+        await otpRecord.deleteOne();
+
+        return res.status(200).json(
+
+            new ApiResponse(
+                200,
+                "Password reset successfully"
+            )
+
+        );
+
+    }
+);
 module.exports = {
   register,
   login,
   logout,
   me,
+  forgotPassword,
+  verifyForgotPasswordOTP,
+  resetPassword,
 };

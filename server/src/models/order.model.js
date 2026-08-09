@@ -90,6 +90,11 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
+    couponCode: {
+    type: String,
+    default: "",
+},
+
     totalAmount: {
       type: Number,
       required: true,
@@ -119,6 +124,39 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "Pending",
     },
+
+    returnStatus: {
+    type: String,
+    enum: [
+        "Not Requested",
+        "Requested",
+        "Approved",
+        "Rejected",
+        "Refund Pending",
+        "Refunded"
+    ],
+    default: "Not Requested",
+},
+
+returnReason: {
+    type: String,
+    default: "",
+},
+
+refundStatus: {
+    type: String,
+    enum: [
+        "Not Applicable",
+        "Pending",
+        "Processed"
+    ],
+    default: "Not Applicable",
+},
+
+refundAmount: {
+    type: Number,
+    default: 0,
+},
   },
   {
     timestamps: true,

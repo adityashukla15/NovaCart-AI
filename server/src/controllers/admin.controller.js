@@ -597,6 +597,124 @@ const restoreProduct = asyncHandler(async (req, res) => {
 
 });
 
+// ======================================
+// UPDATE RETURN STATUS (ADMIN)
+// ======================================
+
+const updateReturnStatus = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+    const { returnStatus } = req.body;
+
+    const allowedStatuses = [
+        "Approved",
+        "Rejected",
+    ];
+
+    if (!allowedStatuses.includes(returnStatus)) {
+        throw new ApiError(
+            400,
+            "Invalid return status"
+        );
+    }
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+        throw new ApiError(
+            404,
+            "Order not found"
+        );
+    }
+
+    if (order.returnStatus !== "Requested") {
+        throw new ApiError(
+            400,
+            "No pending return request"
+        );
+    }
+
+    if (returnStatus === "Approved") {
+
+        order.returnStatus = "Approved";
+
+        order.refundStatus = "Pending";
+
+        order.refundAmount =
+            order.totalAmount;
+
+    }
+
+    if (returnStatus === "Rejected") {
+
+        order.returnStatus = "Rejected";
+
+        order.refundStatus =
+            "Not Applicable";
+
+        order.refundAmount = 0;
+
+    }
+
+    await order.save();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            `Return request ${returnStatus.toLowerCase()} successfully`,
+            order
+        )
+    );
+
+});
+
+// ======================================
+// PROCESS REFUND (ADMIN)
+// ======================================
+
+const processRefund = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+        throw new ApiError(
+            404,
+            "Order not found"
+        );
+    }
+
+    if (order.returnStatus !== "Approved") {
+        throw new ApiError(
+            400,
+            "Return must be approved first"
+        );
+    }
+
+    if (order.refundStatus === "Processed") {
+        throw new ApiError(
+            400,
+            "Refund is already processed"
+        );
+    }
+
+    order.refundStatus = "Processed";
+
+    order.returnStatus = "Refunded";
+
+    await order.save();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Refund processed successfully",
+            order
+        )
+    );
+
+});
+
 module.exports = {
-    getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct
+    getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund
 };
