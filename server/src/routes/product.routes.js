@@ -22,7 +22,7 @@ router.post(
     createProduct
 );
 
-router.get("/get-products", getAllProducts);
+router.get("/", getAllProducts);
 
 router.get("/:id", getProductById);
 
