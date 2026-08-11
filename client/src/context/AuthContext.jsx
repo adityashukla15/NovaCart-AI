@@ -1,83 +1,147 @@
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useState,
 } from "react";
 
 import {
-  getCurrentUser,
-  logoutUser,
+    getCurrentUser,
+    logoutUser,
 } from "../services/authApi";
+
 
 const AuthContext = createContext();
 
+
 export const AuthProvider = ({ children }) => {
 
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
 
-  // GET CURRENT USER
-  const fetchUser = async () => {
+    const [loading, setLoading] = useState(true);
 
-    try {
 
-        const response = await getCurrentUser();
+    // ======================================
+    // CHECK CURRENT USER
+    // ======================================
 
-        setUser(response.data?.data);
+    useEffect(() => {
 
-    } catch (error) {
+        let cancelled = false;
 
-        if (error.response?.status === 401) {
+        const loadCurrentUser = async () => {
+
+            try {
+
+                const response =
+                    await getCurrentUser();
+
+                const currentUser =
+                    response.data?.data || null;
+
+                if (!cancelled) {
+
+                    setUser(currentUser);
+
+                }
+
+            } catch (error) {
+
+                if (
+                    error.response?.status === 401
+                ) {
+
+                    if (!cancelled) {
+                        setUser(null);
+                    }
+
+                } else {
+
+                    console.error(
+                        "Failed to fetch current user:",
+                        error
+                    );
+
+                }
+
+            } finally {
+
+                if (!cancelled) {
+
+                    setLoading(false);
+
+                }
+
+            }
+
+        };
+
+        loadCurrentUser();
+
+
+        // Cleanup
+
+        return () => {
+
+            cancelled = true;
+
+        };
+
+    }, []);
+
+
+    // ======================================
+    // LOGOUT
+    // ======================================
+
+    const logout = async () => {
+
+        try {
+
+            await logoutUser();
+
             setUser(null);
-        } else {
-            console.error("Failed to fetch current user:", error);
+
+        } catch (error) {
+
+            console.error(
+                "Logout failed:",
+                error
+            );
+
         }
 
-    } finally {
+    };
 
-        setLoading(false);
 
-    }
+    // ======================================
+    // CONTEXT VALUE
+    // ======================================
+
+    return (
+
+        <AuthContext.Provider
+            value={{
+                user,
+                setUser,
+                loading,
+                logout,
+            }}
+        >
+
+            {children}
+
+        </AuthContext.Provider>
+
+    );
+
 };
 
-  // LOGOUT
-  const logout = async () => {
 
-    try {
-
-      await logoutUser();
-
-      setUser(null);
-
-    } catch (error) {
-
-      console.error("Logout failed:", error);
-
-    }
-
-  };
-
-  // Check logged-in user when app starts
-  useEffect(() => {
-
-    fetchUser();
-
-  }, []);
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        loading,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+// ======================================
+// USE AUTH HOOK
+// ======================================
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () =>
+    useContext(AuthContext);

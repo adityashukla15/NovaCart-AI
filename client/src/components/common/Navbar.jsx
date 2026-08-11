@@ -11,7 +11,6 @@ import {
 
 import { useAuth } from "../../context/AuthContext";
 
-
 const Navbar = () => {
 
     const navigate = useNavigate();
@@ -49,6 +48,36 @@ const Navbar = () => {
     };
 
 
+    // ======================================
+    // CLOSE PROFILE DROPDOWN
+    // ======================================
+
+    const closeProfile = () => {
+
+        setProfileOpen(false);
+
+    };
+
+
+    // ======================================
+    // MY PROFILE NAVIGATION
+    // ======================================
+
+    const handleMyProfile = () => {
+
+        setProfileOpen(false);
+
+        // IMPORTANT:
+        // Profile component ka route /profile hai
+        navigate("/profile");
+
+    };
+
+
+    // ======================================
+    // RENDER
+    // ======================================
+
     return (
 
         <nav className="border-b border-gray-200 bg-white">
@@ -56,7 +85,9 @@ const Navbar = () => {
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
 
-                {/* ================= LOGO ================= */}
+                {/* ==================================
+                    LOGO
+                ================================== */}
 
                 <Link
                     to="/"
@@ -66,7 +97,9 @@ const Navbar = () => {
                 </Link>
 
 
-                {/* ================= NAV LINKS ================= */}
+                {/* ==================================
+                    NAV LINKS
+                ================================== */}
 
                 <div className="hidden items-center gap-8 md:flex">
 
@@ -104,69 +137,91 @@ const Navbar = () => {
                 </div>
 
 
-                {/* ================= RIGHT ICONS ================= */}
+                {/* ==================================
+                    RIGHT SIDE
+                ================================== */}
 
                 <div className="flex items-center gap-2">
 
 
-                    {/* ================= WISHLIST ================= */}
+                    {/* ==================================
+                        WISHLIST
+                    ================================== */}
 
                     <Link
                         to="/wishlist"
                         title="Wishlist"
+                        aria-label="Wishlist"
                         className="rounded-full p-2.5 text-gray-700 transition hover:bg-gray-100 hover:text-red-500"
                     >
 
-                        <Heart size={21} />
+                        <Heart
+                            size={21}
+                        />
 
                     </Link>
 
 
-                    {/* ================= CART ================= */}
+                    {/* ==================================
+                        CART
+                    ================================== */}
 
                     <Link
                         to="/cart"
                         title="Shopping Cart"
+                        aria-label="Shopping Cart"
                         className="rounded-full p-2.5 text-gray-700 transition hover:bg-gray-100"
                     >
 
-                        <ShoppingCart size={21} />
+                        <ShoppingCart
+                            size={21}
+                        />
 
                     </Link>
 
 
-                    {/* ================= PROFILE ================= */}
+                    {/* ==================================
+                        PROFILE
+                    ================================== */}
 
                     {user && (
 
                         <div className="relative">
 
-                            {/* User Button */}
+
+                            {/* USER BUTTON */}
 
                             <button
                                 type="button"
                                 title="Account"
+                                aria-label="Account"
                                 onClick={() =>
                                     setProfileOpen(
-                                        !profileOpen
+                                        (prev) => !prev
                                     )
                                 }
                                 className="rounded-full p-2.5 text-gray-700 transition hover:bg-gray-100"
                             >
 
-                                <User size={21} />
+                                <User
+                                    size={21}
+                                />
 
                             </button>
 
 
-                            {/* ================= DROPDOWN ================= */}
+                            {/* ==================================
+                                PROFILE DROPDOWN
+                            ================================== */}
 
                             {profileOpen && (
 
                                 <div className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
 
 
-                                    {/* USER INFO */}
+                                    {/* ==================================
+                                        USER INFO
+                                    ================================== */}
 
                                     <div className="border-b border-gray-100 px-4 py-4">
 
@@ -175,6 +230,7 @@ const Navbar = () => {
                                             {user.name}
 
                                         </p>
+
 
                                         <p className="mt-1 truncate text-sm text-gray-500">
 
@@ -185,58 +241,67 @@ const Navbar = () => {
                                     </div>
 
 
-                                    {/* ================= PROFILE ================= */}
+                                    {/* ==================================
+                                        MY PROFILE
+                                    ================================== */}
+
+                                    <button
+                                        type="button"
+                                        onClick={handleMyProfile}
+                                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 transition hover:bg-gray-50"
+                                    >
+
+                                        <User
+                                            size={18}
+                                        />
+
+                                        My Profile
+
+                                    </button>
+
+
+                                    {/* ==================================
+                                        MY ORDERS
+                                    ================================== */}
 
                                     <Link
-                                        to="/profile"
-                                        onClick={() =>
-                                            setProfileOpen(false)
-                                        }
+                                        to="/my-orders"
+                                        onClick={closeProfile}
                                         className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-50"
                                     >
 
-                                        <User size={18} />
-
-                                        Profile
-
-                                    </Link>
-
-
-                                    {/* ================= ORDERS ================= */}
-
-                                    <Link
-                                        to="/orders"
-                                        onClick={() =>
-                                            setProfileOpen(false)
-                                        }
-                                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-50"
-                                    >
-
-                                        <Package size={18} />
+                                        <Package
+                                            size={18}
+                                        />
 
                                         My Orders
 
                                     </Link>
 
 
-                                    {/* ================= WISHLIST ================= */}
+                                    {/* ==================================
+                                        WISHLIST
+                                    ================================== */}
 
                                     <Link
                                         to="/wishlist"
-                                        onClick={() =>
-                                            setProfileOpen(false)
-                                        }
+                                        onClick={closeProfile}
                                         className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-50"
                                     >
 
-                                        <Heart size={18} />
+                                        <Heart
+                                            size={18}
+                                            className="text-red-500"
+                                        />
 
                                         Wishlist
 
                                     </Link>
 
 
-                                    {/* ================= LOGOUT ================= */}
+                                    {/* ==================================
+                                        LOGOUT
+                                    ================================== */}
 
                                     <div className="border-t border-gray-100">
 
@@ -246,7 +311,9 @@ const Navbar = () => {
                                             className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
                                         >
 
-                                            <LogOut size={18} />
+                                            <LogOut
+                                                size={18}
+                                            />
 
                                             Logout
 

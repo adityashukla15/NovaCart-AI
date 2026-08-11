@@ -14,5 +14,9 @@ router.get('/me',authMiddleware,authController.me)
 router.post('/forgot-password',authController.forgotPassword)
 router.post('/verify-otp',authController.verifyForgotPasswordOTP)
 router.post('/reset-password',authController.resetPassword)
-
+router.put(
+    "/profile",
+    authMiddleware,
+    authController.updateProfile
+);
 module.exports=router

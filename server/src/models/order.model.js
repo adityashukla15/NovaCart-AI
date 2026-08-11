@@ -157,6 +157,16 @@ refundAmount: {
     type: Number,
     default: 0,
 },
+
+subtotal: {
+    type: Number,
+    required: true,
+},
+
+discount: {
+    type: Number,
+    default: 0,
+},
   },
   {
     timestamps: true,

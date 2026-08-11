@@ -18,7 +18,7 @@ const {
 
 router.post(
 
-    "/addtowishlist/:productId",
+    "/add/:productId",
 
     authMiddleware,
 
@@ -38,7 +38,7 @@ router.get(
 
 router.delete(
 
-    "/delete-wishlist/:productId",
+    "/delete/:productId",
 
     authMiddleware,
 
@@ -48,7 +48,7 @@ router.delete(
 
 router.delete(
 
-    "/delete-all-wishlist",
+    "/delete-all",
 
     authMiddleware,
 

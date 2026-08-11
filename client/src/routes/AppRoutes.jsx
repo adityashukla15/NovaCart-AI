@@ -9,6 +9,12 @@ import ProductDetail from "../components/product/ProductDetail";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import Cart from "../pages/Cart";
+import Checkout from "../pages/Checkout";
+import MyOrders from "../components/MyOrders"
+import OrderDetails from "../components/OrderDetails";
+import Wishlist from "../components/Wishlist"
+import Profile from "../components/Profile";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -92,6 +98,7 @@ const AppRoutes = () => {
                     <ProtectedRoute>
                         <MainLayout>
                             <Home />
+    
                         </MainLayout>
                     </ProtectedRoute>
                 }
@@ -132,7 +139,33 @@ const AppRoutes = () => {
                 path="*"
                 element={<Navigate to="/login" replace />}
             />
+            {/* CART */}
+            <Route
+    path="/cart"
+    element={<Cart />}
+/>
+<Route
+    path="/checkout"
+    element={<Checkout />}
+/>
 
+<Route
+    path="/my-orders"
+    element={<MyOrders />}
+/>
+
+<Route
+    path="/orders/:id"
+    element={<OrderDetails />}
+/>
+<Route
+    path="/wishlist"
+    element={<Wishlist />}
+/>
+<Route
+    path="/profile"
+    element={<Profile />}
+/>
         </Routes>
 
     );

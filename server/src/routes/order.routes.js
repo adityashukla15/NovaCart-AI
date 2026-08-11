@@ -14,7 +14,7 @@ router.get('/:id',authMiddleware,getOrderById)
 router.put('/status/:id',authMiddleware,updateOrderStatus)
 router.delete('/:id',authMiddleware,deleteOrder)
 router.put('/cancel/:id',authMiddleware,cancelOrder)
-router.post('/coupons/apply-coupon',authMiddleware,applyCoupon)
+router.post('/apply-coupon',authMiddleware,applyCoupon)
 router.post(
     "/:id/return",
     authMiddleware,

@@ -25,19 +25,15 @@ const ProductDetails = () => {
     // ======================================
 
     const [product, setProduct] = useState(null);
-
     const [reviews, setReviews] = useState([]);
-
     const [similarProducts, setSimilarProducts] = useState([]);
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
     const [quantity, setQuantity] = useState(1);
 
     const [selectedSize, setSelectedSize] = useState("");
-
     const [selectedColor, setSelectedColor] = useState("");
 
 
@@ -45,78 +41,80 @@ const ProductDetails = () => {
     // FETCH PRODUCT
     // ======================================
 
-    const fetchProduct = async () => {
-
-        try {
-
-            setLoading(true);
-
-            setError("");
-
-            const response = await getProductById(id);
-
-            console.log(
-                "Product Details Response:",
-                response.data
-            );
-
-
-            // ======================================
-            // BACKEND RESPONSE
-            //
-            // data: {
-            //     product,
-            //     reviews,
-            //     similarProducts
-            // }
-            // ======================================
-
-            setProduct(
-                response.data?.data?.product
-            );
-
-            setReviews(
-                response.data?.data?.reviews || []
-            );
-
-            setSimilarProducts(
-                response.data?.data?.similarProducts || []
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "PRODUCT DETAILS ERROR:",
-                error
-            );
-
-            setError(
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to load product"
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-    };
-
-
-    // ======================================
-    // FETCH WHEN ID CHANGES
-    // ======================================
-
     useEffect(() => {
 
-        if (id) {
-
-            fetchProduct();
-
+        if (!id) {
+            return;
         }
+
+        let ignore = false;
+
+        const loadProduct = async () => {
+
+            try {
+
+                setLoading(true);
+                setError("");
+
+                // Reset old product when ID changes
+                setProduct(null);
+                setReviews([]);
+                setSimilarProducts([]);
+
+                const response = await getProductById(id);
+
+                console.log(
+                    "Product Details Response:",
+                    response.data
+                );
+
+                if (ignore) {
+                    return;
+                }
+
+                const data = response.data?.data;
+
+                setProduct(data?.product || null);
+                setReviews(data?.reviews || []);
+                setSimilarProducts(data?.similarProducts || []);
+
+                // Reset selections for new product
+                setQuantity(1);
+                setSelectedSize("");
+                setSelectedColor("");
+
+            } catch (error) {
+
+                if (ignore) {
+                    return;
+                }
+
+                console.error(
+                    "PRODUCT DETAILS ERROR:",
+                    error
+                );
+
+                setError(
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to load product"
+                );
+
+            } finally {
+
+                if (!ignore) {
+                    setLoading(false);
+                }
+
+            }
+
+        };
+
+        loadProduct();
+
+        return () => {
+            ignore = true;
+        };
 
     }, [id]);
 
@@ -128,15 +126,13 @@ const ProductDetails = () => {
     if (loading) {
 
         return (
+            <div className="flex min-h-screen items-center justify-center">
 
-            <div className="min-h-screen flex items-center justify-center">
-
-                <p className="text-lg">
+                <p className="text-lg text-gray-600">
                     Loading product...
                 </p>
 
             </div>
-
         );
 
     }
@@ -149,19 +145,17 @@ const ProductDetails = () => {
     if (error || !product) {
 
         return (
-
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center">
 
                 <div className="text-center">
 
-                    <p className="text-red-500 text-lg">
+                    <p className="text-lg text-red-500">
                         {error || "Product not found"}
                     </p>
 
                 </div>
 
             </div>
-
         );
 
     }
@@ -175,17 +169,14 @@ const ProductDetails = () => {
         product.images?.[0] ||
         "https://via.placeholder.com/600x600?text=No+Image";
 
-
     const rating =
         product.averageRating ||
         product.rating ||
         0;
 
-
     const finalPrice =
         product.discountPrice ||
         product.price;
-
 
     const hasDiscount =
         product.discountPrice &&
@@ -221,19 +212,13 @@ const ProductDetails = () => {
     const handleAddToCart = () => {
 
         console.log("Add to cart:", {
-
             productId: product._id,
-
             quantity,
-
             size: selectedSize,
-
             color: selectedColor,
-
         });
 
-        // Cart API next phase
-
+        // Cart API yahan connect kar sakte ho
     };
 
 
@@ -248,8 +233,7 @@ const ProductDetails = () => {
             product._id
         );
 
-        // Wishlist API next phase
-
+        // Wishlist API yahan connect kar sakte ho
     };
 
 
@@ -265,7 +249,6 @@ const ProductDetails = () => {
 
                 <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
 
-
                     {/* ======================================
                         IMAGE
                     ====================================== */}
@@ -275,7 +258,7 @@ const ProductDetails = () => {
                         <img
                             src={image}
                             alt={product.title}
-                            className="h-full max-h-[650px] w-full object-cover"
+                            className="h-full max-h-162.5 w-full object-cover"
                         />
 
                     </div>
@@ -287,15 +270,12 @@ const ProductDetails = () => {
 
                     <div>
 
-
                         {/* BRAND */}
 
                         {product.brand && (
 
                             <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
-
                                 {product.brand}
-
                             </p>
 
                         )}
@@ -304,9 +284,7 @@ const ProductDetails = () => {
                         {/* TITLE */}
 
                         <h1 className="mt-2 text-3xl font-bold md:text-4xl">
-
                             {product.title}
-
                         </h1>
 
 
@@ -315,9 +293,7 @@ const ProductDetails = () => {
                         {product.category?.name && (
 
                             <p className="mt-2 text-sm text-gray-500">
-
                                 {product.category.name}
-
                             </p>
 
                         )}
@@ -329,31 +305,24 @@ const ProductDetails = () => {
 
                         <div className="mt-4 flex items-center gap-1">
 
-                            {[...Array(5)].map(
-                                (_, index) => (
+                            {[...Array(5)].map((_, index) => (
 
-                                    <Star
-                                        key={index}
-                                        size={18}
-                                        fill={
-                                            index <
-                                            Math.round(rating)
-                                                ? "gold"
-                                                : "none"
-                                        }
-                                        color="gold"
-                                    />
+                                <Star
+                                    key={index}
+                                    size={18}
+                                    fill={
+                                        index < Math.round(rating)
+                                            ? "gold"
+                                            : "none"
+                                    }
+                                    color="gold"
+                                />
 
-                                )
-                            )}
+                            ))}
 
                             <span className="ml-2 text-sm text-gray-500">
 
-                                {rating}
-
-                                {" "}
-
-                                (
+                                {rating} (
                                 {product.totalReviews || 0}
                                 reviews)
 
@@ -369,18 +338,13 @@ const ProductDetails = () => {
                         <div className="mt-6 flex items-center gap-4">
 
                             <span className="text-3xl font-bold">
-
                                 ₹{finalPrice}
-
                             </span>
-
 
                             {hasDiscount && (
 
                                 <span className="text-lg text-gray-400 line-through">
-
                                     ₹{product.price}
-
                                 </span>
 
                             )}
@@ -393,9 +357,7 @@ const ProductDetails = () => {
                         {product.discountPercentage > 0 && (
 
                             <p className="mt-2 text-sm font-medium text-green-600">
-
                                 {product.discountPercentage}% OFF
-
                             </p>
 
                         )}
@@ -406,9 +368,7 @@ const ProductDetails = () => {
                         ====================================== */}
 
                         <p className="mt-6 leading-7 text-gray-600">
-
                             {product.description}
-
                         </p>
 
 
@@ -421,39 +381,29 @@ const ProductDetails = () => {
                             <div className="mt-7">
 
                                 <h3 className="mb-3 font-semibold">
-
                                     Color
-
                                 </h3>
-
 
                                 <div className="flex flex-wrap gap-3">
 
-                                    {product.colors.map(
-                                        (color) => (
+                                    {product.colors.map((color) => (
 
-                                            <button
-                                                key={color}
-                                                type="button"
-                                                onClick={() =>
-                                                    setSelectedColor(
-                                                        color
-                                                    )
-                                                }
-                                                className={`rounded-lg border px-4 py-2 transition ${
-                                                    selectedColor ===
-                                                    color
-                                                        ? "border-black bg-black text-white"
-                                                        : "border-gray-300 hover:border-black"
-                                                }`}
-                                            >
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedColor(color)
+                                            }
+                                            className={`rounded-lg border px-4 py-2 transition ${
+                                                selectedColor === color
+                                                    ? "border-black bg-black text-white"
+                                                    : "border-gray-300 hover:border-black"
+                                            }`}
+                                        >
+                                            {color}
+                                        </button>
 
-                                                {color}
-
-                                            </button>
-
-                                        )
-                                    )}
+                                    ))}
 
                                 </div>
 
@@ -471,39 +421,29 @@ const ProductDetails = () => {
                             <div className="mt-7">
 
                                 <h3 className="mb-3 font-semibold">
-
                                     Size
-
                                 </h3>
-
 
                                 <div className="flex flex-wrap gap-3">
 
-                                    {product.sizes.map(
-                                        (size) => (
+                                    {product.sizes.map((size) => (
 
-                                            <button
-                                                key={size}
-                                                type="button"
-                                                onClick={() =>
-                                                    setSelectedSize(
-                                                        size
-                                                    )
-                                                }
-                                                className={`rounded-lg border px-4 py-2 transition ${
-                                                    selectedSize ===
-                                                    size
-                                                        ? "border-black bg-black text-white"
-                                                        : "border-gray-300 hover:border-black"
-                                                }`}
-                                            >
+                                        <button
+                                            key={size}
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedSize(size)
+                                            }
+                                            className={`rounded-lg border px-4 py-2 transition ${
+                                                selectedSize === size
+                                                    ? "border-black bg-black text-white"
+                                                    : "border-gray-300 hover:border-black"
+                                            }`}
+                                        >
+                                            {size}
+                                        </button>
 
-                                                {size}
-
-                                            </button>
-
-                                        )
-                                    )}
+                                    ))}
 
                                 </div>
 
@@ -521,17 +461,13 @@ const ProductDetails = () => {
                             {product.stock > 0 ? (
 
                                 <p className="text-green-600">
-
                                     {product.stock} items available
-
                                 </p>
 
                             ) : (
 
                                 <p className="text-red-500">
-
                                     Out of stock
-
                                 </p>
 
                             )}
@@ -548,51 +484,33 @@ const ProductDetails = () => {
                             <div className="mt-6">
 
                                 <h3 className="mb-3 font-semibold">
-
                                     Quantity
-
                                 </h3>
-
 
                                 <div className="flex w-fit items-center rounded-lg border">
 
                                     <button
                                         type="button"
-                                        onClick={
-                                            decreaseQuantity
-                                        }
-                                        disabled={
-                                            quantity <= 1
-                                        }
+                                        onClick={decreaseQuantity}
+                                        disabled={quantity <= 1}
                                         className="p-3 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
-
                                         <Minus size={18} />
-
                                     </button>
 
-
                                     <span className="min-w-12 text-center font-semibold">
-
                                         {quantity}
-
                                     </span>
-
 
                                     <button
                                         type="button"
-                                        onClick={
-                                            increaseQuantity
-                                        }
+                                        onClick={increaseQuantity}
                                         disabled={
-                                            quantity >=
-                                            product.stock
+                                            quantity >= product.stock
                                         }
                                         className="p-3 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
-
                                         <Plus size={18} />
-
                                     </button>
 
                                 </div>
@@ -609,13 +527,9 @@ const ProductDetails = () => {
                         <div className="mt-8 flex gap-3">
 
                             <Button
-                                onClick={
-                                    handleAddToCart
-                                }
+                                onClick={handleAddToCart}
                                 className="flex-1"
-                                disabled={
-                                    product.stock <= 0
-                                }
+                                disabled={product.stock <= 0}
                             >
 
                                 <ShoppingCart
@@ -632,21 +546,17 @@ const ProductDetails = () => {
 
                             <button
                                 type="button"
-                                onClick={
-                                    handleWishlist
-                                }
+                                onClick={handleWishlist}
                                 className="rounded-lg border p-3 transition hover:bg-gray-100"
                             >
-
                                 <Heart size={21} />
-
                             </button>
 
                         </div>
 
 
                         {/* ======================================
-                            REVIEWS COUNT
+                            REVIEWS
                         ====================================== */}
 
                         {reviews.length > 0 && (
@@ -654,24 +564,19 @@ const ProductDetails = () => {
                             <div className="mt-8 border-t pt-6">
 
                                 <h3 className="text-lg font-semibold">
-
                                     Latest Reviews
-
                                 </h3>
 
                                 <p className="mt-2 text-sm text-gray-500">
 
                                     Showing latest {reviews.length} review
-                                    {reviews.length > 1
-                                        ? "s"
-                                        : ""}
+                                    {reviews.length > 1 ? "s" : ""}
 
                                 </p>
 
                             </div>
 
                         )}
-
 
                     </div>
 
@@ -687,90 +592,70 @@ const ProductDetails = () => {
                     <div className="mt-16">
 
                         <h2 className="text-2xl font-bold">
-
                             Similar Products
-
                         </h2>
-
 
                         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
-                            {similarProducts.map(
-                                (item) => (
+                            {similarProducts.map((item) => (
 
-                                    <div
-                                        key={item._id}
-                                        className="overflow-hidden rounded-xl border bg-white"
-                                    >
+                                <div
+                                    key={item._id}
+                                    className="overflow-hidden rounded-xl border bg-white"
+                                >
 
-                                        <img
-                                            src={
-                                                item.images?.[0] ||
-                                                "https://via.placeholder.com/400x400?text=No+Image"
-                                            }
-                                            alt={
-                                                item.title
-                                            }
-                                            className="h-52 w-full object-cover"
-                                        />
+                                    <img
+                                        src={
+                                            item.images?.[0] ||
+                                            "https://via.placeholder.com/400x400?text=No+Image"
+                                        }
+                                        alt={item.title}
+                                        className="h-52 w-full object-cover"
+                                    />
 
+                                    <div className="p-4">
 
-                                        <div className="p-4">
+                                        <h3 className="font-semibold">
+                                            {item.title}
+                                        </h3>
 
-                                            <h3 className="font-semibold">
+                                        <div className="mt-2">
 
-                                                {item.title}
+                                            <span className="font-bold">
+                                                ₹
+                                                {item.discountPrice ||
+                                                    item.price}
+                                            </span>
 
-                                            </h3>
+                                            {item.discountPrice &&
+                                                item.discountPrice <
+                                                    item.price && (
 
+                                                    <span className="ml-2 text-sm text-gray-400 line-through">
+                                                        ₹{item.price}
+                                                    </span>
 
-                                            <div className="mt-2">
-
-                                                <span className="font-bold">
-
-                                                    ₹
-                                                    {item.discountPrice ||
-                                                        item.price}
-
-                                                </span>
-
-
-                                                {item.discountPrice &&
-                                                    item.discountPrice <
-                                                        item.price && (
-
-                                                        <span className="ml-2 text-sm text-gray-400 line-through">
-
-                                                            ₹
-                                                            {item.price}
-
-                                                        </span>
-
-                                                    )}
-
-                                            </div>
-
-
-                                            <p
-                                                className={`mt-2 text-sm ${
-                                                    item.stock > 0
-                                                        ? "text-green-600"
-                                                        : "text-red-500"
-                                                }`}
-                                            >
-
-                                                {item.stock > 0
-                                                    ? "In Stock"
-                                                    : "Out of Stock"}
-
-                                            </p>
+                                                )}
 
                                         </div>
 
+                                        <p
+                                            className={`mt-2 text-sm ${
+                                                item.stock > 0
+                                                    ? "text-green-600"
+                                                    : "text-red-500"
+                                            }`}
+                                        >
+                                            {item.stock > 0
+                                                ? "In Stock"
+                                                : "Out of Stock"}
+                                        </p>
+
                                     </div>
 
-                                )
-                            )}
+                                </div>
+
+                            ))}
 
                         </div>
 
@@ -783,7 +668,6 @@ const ProductDetails = () => {
         </div>
 
     );
-
 };
 
 export default ProductDetails;

@@ -399,7 +399,82 @@ const resetPassword = asyncHandler(
         );
 
     }
+    
 );
+
+// ======================================
+// UPDATE PROFILE
+// ======================================
+
+const updateProfile = asyncHandler(async (req, res) => {
+
+    const {
+        name,
+        avatar,
+    } = req.body;
+
+    if (!name || !name.trim()) {
+
+        throw new ApiError(
+            400,
+            "Name is required"
+        );
+
+    }
+
+    const user = await User.findById(
+        req.user._id
+    );
+
+    if (!user) {
+
+        throw new ApiError(
+            404,
+            "User not found"
+        );
+
+    }
+
+    user.name = name.trim();
+
+    if (avatar !== undefined) {
+        user.avatar = avatar;
+    }
+
+    await user.save();
+
+    const userData = {
+
+        _id: user._id,
+
+        name: user.name,
+
+        email: user.email,
+
+        role: user.role,
+
+        avatar: user.avatar,
+
+        createdAt: user.createdAt,
+
+    };
+
+    return res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Profile updated successfully",
+
+            userData
+
+        )
+
+    );
+
+});
+
 module.exports = {
   register,
   login,
@@ -408,4 +483,5 @@ module.exports = {
   forgotPassword,
   verifyForgotPasswordOTP,
   resetPassword,
+  updateProfile,
 };
