@@ -7,6 +7,7 @@ import {
     User,
     Package,
     LogOut,
+    LayoutDashboard,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -60,16 +61,27 @@ const Navbar = () => {
 
 
     // ======================================
-    // MY PROFILE NAVIGATION
+    // MY PROFILE
     // ======================================
 
     const handleMyProfile = () => {
 
         setProfileOpen(false);
 
-        // IMPORTANT:
-        // Profile component ka route /profile hai
         navigate("/profile");
+
+    };
+
+
+    // ======================================
+    // ADMIN DASHBOARD
+    // ======================================
+
+    const handleAdminDashboard = () => {
+
+        setProfileOpen(false);
+
+        navigate("/admin");
 
     };
 
@@ -216,7 +228,7 @@ const Navbar = () => {
 
                             {profileOpen && (
 
-                                <div className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+                                <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
 
 
                                     {/* ==================================
@@ -238,7 +250,48 @@ const Navbar = () => {
 
                                         </p>
 
+
+                                        {/* ROLE */}
+
+                                        <span
+                                            className={`mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                                                user.role === "admin"
+                                                    ? "bg-black text-white"
+                                                    : "bg-gray-100 text-gray-600"
+                                            }`}
+                                        >
+
+                                            {user.role}
+
+                                        </span>
+
                                     </div>
+
+
+                                    {/* ==================================
+                                        ADMIN DASHBOARD
+                                        ONLY ADMIN
+                                    ================================== */}
+
+                                    {user.role === "admin" && (
+
+                                        <button
+                                            type="button"
+                                            onClick={
+                                                handleAdminDashboard
+                                            }
+                                            className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left text-sm font-medium text-gray-900 transition hover:bg-gray-50"
+                                        >
+
+                                            <LayoutDashboard
+                                                size={18}
+                                            />
+
+                                            Admin Dashboard
+
+                                        </button>
+
+                                    )}
 
 
                                     {/* ==================================
@@ -247,7 +300,9 @@ const Navbar = () => {
 
                                     <button
                                         type="button"
-                                        onClick={handleMyProfile}
+                                        onClick={
+                                            handleMyProfile
+                                        }
                                         className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 transition hover:bg-gray-50"
                                     >
 
@@ -307,7 +362,9 @@ const Navbar = () => {
 
                                         <button
                                             type="button"
-                                            onClick={handleLogout}
+                                            onClick={
+                                                handleLogout
+                                            }
                                             className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
                                         >
 

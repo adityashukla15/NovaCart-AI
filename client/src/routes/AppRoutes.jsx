@@ -15,6 +15,7 @@ import MyOrders from "../components/MyOrders"
 import OrderDetails from "../components/OrderDetails";
 import Wishlist from "../components/Wishlist"
 import Profile from "../components/Profile";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -165,6 +166,11 @@ const AppRoutes = () => {
 <Route
     path="/profile"
     element={<Profile />}
+/>
+
+<Route
+    path="/admin"
+    element={<AdminDashboard />}
 />
         </Routes>
 
