@@ -210,17 +210,17 @@ const updateReview = asyncHandler(async (req, res) => {
 
     }
 
-    if (rating) {
-
-        existingReview.rating = rating;
-
+    if (rating !== undefined) {
+    if (rating < 1 || rating > 5) {
+        throw new ApiError(400, "Rating must be between 1 and 5");
     }
 
-    if (review) {
+    existingReview.rating = rating;
+}
 
-        existingReview.review = review;
-
-    }
+    if (review !== undefined) {
+    existingReview.review = review;
+}
 
     await existingReview.save();
 
