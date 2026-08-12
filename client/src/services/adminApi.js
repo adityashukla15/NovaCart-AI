@@ -161,3 +161,27 @@ export const updateReturnStatus = (id, returnStatus) => {
 export const processRefund = (id) => {
     return api.patch(`/admin/orders/${id}/refund`);
 };
+
+export const getAdminCategories = () => {
+    return api.get("/categories");
+};
+
+export const createAdminCategory = (data) => {
+    return api.post(
+        "/categories/create-category",
+        data
+    );
+};
+
+export const updateAdminCategory = (id, data) => {
+    return api.patch(
+        `/categories/update-category/${id}`,
+        data
+    );
+};
+
+export const deleteAdminCategory = (id) => {
+    return api.delete(
+        `/categories/delete-category/${id}`
+    );
+};
