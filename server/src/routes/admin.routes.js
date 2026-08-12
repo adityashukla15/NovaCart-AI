@@ -4,7 +4,7 @@ const router=express.Router()
 
 const adminMiddleware=require('../middlewares/admin.middleware')
 
-const {getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund}=require('../controllers/admin.controller')
+const {getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus}=require('../controllers/admin.controller')
 const {createCoupon,getAllCoupons,updateCoupon,deleteCoupon,toggleCoupon,}=require('../controllers/coupon.controller')
 
 
@@ -47,4 +47,10 @@ router.patch(
     processRefund
 );
 
+router.put(
+    "/update-order/:id/payment",
+    authMiddleware,
+    adminMiddleware,
+    updatePaymentStatus
+);
 module.exports=router

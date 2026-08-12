@@ -21,6 +21,7 @@ import AdminProducts from "../components/admin/AdminProducts";
 import AdminCategories from "../components/admin/AdminCategories";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminCoupons from "../components/admin/AdminCoupons";
+import AdminOrders from "../components/admin/AdminOrders";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -192,6 +193,10 @@ const AppRoutes = () => {
     <Route
     path="/admin/coupons"
     element={<AdminCoupons />}
+/>
+<Route
+    path="/admin/orders"
+    element={<AdminOrders />}
 />
 </Route>
         </Routes>

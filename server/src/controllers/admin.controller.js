@@ -615,6 +615,47 @@ const restoreProduct = asyncHandler(async (req, res) => {
 // ======================================
 // UPDATE RETURN STATUS (ADMIN)
 // ======================================
+const updatePaymentStatus = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+    const { paymentStatus } = req.body;
+
+    const allowed = [
+        "Pending",
+        "Paid",
+        "Failed",
+        "Refunded",
+    ];
+
+    if (!allowed.includes(paymentStatus)) {
+        throw new ApiError(
+            400,
+            "Invalid payment status"
+        );
+    }
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+        throw new ApiError(
+            404,
+            "Order not found"
+        );
+    }
+
+    order.paymentStatus = paymentStatus;
+
+    await order.save();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Payment status updated successfully",
+            order
+        )
+    );
+
+});
 
 const updateReturnStatus = asyncHandler(async (req, res) => {
 
@@ -731,5 +772,5 @@ const processRefund = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund
+    getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus,
 };

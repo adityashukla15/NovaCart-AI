@@ -125,16 +125,6 @@ export const toggleUserStatus = (
 // ORDERS
 // ======================================
 
-export const getAllOrders = () => {
-    return api.get("/admin/orders");
-};
-
-
-export const updateOrderStatus = (id, status) => {
-    return api.put(`/admin/update-order/${id}/status`, {
-        status,
-    });
-};
 
 
 // ======================================
@@ -228,3 +218,37 @@ export const toggleAdminCoupon = (id) => {
     return api.patch(`/admin/coupons/${id}/toggle`);
 };
 
+export const getAdminOrders = () => {
+    return api.get("/admin/orders");
+};
+
+
+// ===============================
+// UPDATE ORDER STATUS
+// ===============================
+
+export const updateOrderStatus = (orderId, status) => {
+    return api.put(
+        `/admin/update-order/${orderId}/status`,
+        {
+            status,
+        }
+    );
+};
+
+
+// ===============================
+// UPDATE PAYMENT STATUS
+// ===============================
+
+export const updatePaymentStatus = (
+    orderId,
+    paymentStatus
+) => {
+    return api.put(
+        `/admin/update-order/${orderId}/payment`,
+        {
+            paymentStatus,
+        }
+    );
+};
