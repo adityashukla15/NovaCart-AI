@@ -123,8 +123,9 @@ const getMonthlySales = asyncHandler(async (req, res) => {
 
         {
             $match: {
-                paymentStatus: "Paid",
-            },
+    paymentStatus: "Paid",
+    orderStatus: { $ne: "Cancelled" },
+}
         },
 
         {
@@ -166,7 +167,7 @@ const getMonthlySales = asyncHandler(async (req, res) => {
 });
 
 
-const getOrderStatusAnalytics = asyncHandler(async (req, res) => {
+const getOrderAnalytics = asyncHandler(async (req, res) => {
 
     const data = await Order.aggregate([
 
@@ -772,5 +773,5 @@ const processRefund = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus,
+    getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus,
 };

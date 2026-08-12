@@ -4,13 +4,13 @@ const router=express.Router()
 
 const adminMiddleware=require('../middlewares/admin.middleware')
 
-const {getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus}=require('../controllers/admin.controller')
+const {getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus}=require('../controllers/admin.controller')
 const {createCoupon,getAllCoupons,updateCoupon,deleteCoupon,toggleCoupon,}=require('../controllers/coupon.controller')
 
 
 router.get('/dashboard',authMiddleware,adminMiddleware,getDashboard)
 router.get('/monthly-sales',authMiddleware,adminMiddleware,getMonthlySales)
-router.get('/order-analytics',authMiddleware,adminMiddleware,getOrderStatusAnalytics)
+router.get('/order-analytics',authMiddleware,adminMiddleware,getOrderAnalytics)
 router.get('/category-sales',authMiddleware,adminMiddleware,getCategorySales)
 router.get('/users',authMiddleware,adminMiddleware,getAllUsers)
 router.put('/update-role/:userId',authMiddleware,adminMiddleware,updateUserRole)
