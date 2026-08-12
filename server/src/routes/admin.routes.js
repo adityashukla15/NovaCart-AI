@@ -5,7 +5,7 @@ const router=express.Router()
 const adminMiddleware=require('../middlewares/admin.middleware')
 
 const {getDashboard,getMonthlySales,getOrderStatusAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund}=require('../controllers/admin.controller')
-const {createCoupon,getAllCoupons,updateCoupon,deleteCoupon}=require('../controllers/coupon.controller')
+const {createCoupon,getAllCoupons,updateCoupon,deleteCoupon,toggleCoupon,}=require('../controllers/coupon.controller')
 
 
 router.get('/dashboard',authMiddleware,adminMiddleware,getDashboard)
@@ -25,6 +25,12 @@ router.post('/coupons/create',authMiddleware,adminMiddleware,createCoupon)
 router.get('/coupons/get-all',authMiddleware,adminMiddleware,getAllCoupons)
 router.put('/coupons/update/:id',authMiddleware,adminMiddleware,updateCoupon)
 router.delete('/coupons/delete/:id',authMiddleware,adminMiddleware,deleteCoupon)
+router.patch(
+    "/coupons/:id/toggle",
+    authMiddleware,
+    adminMiddleware,
+    toggleCoupon
+);
 
 
 router.patch(

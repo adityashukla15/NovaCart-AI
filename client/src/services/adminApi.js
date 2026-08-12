@@ -200,3 +200,31 @@ export const deleteAdminCategory = (id) => {
     );
 };
 
+// ======================================
+// COUPONS
+// ======================================
+
+export const getAdminCoupons = () => {
+    return api.get("/admin/coupons/get-all");
+};
+
+
+export const createAdminCoupon = (data) => {
+    return api.post("/admin/coupons/create", data);
+};
+
+
+export const updateAdminCoupon = (id, data) => {
+    return api.put(`/admin/coupons/update/${id}`, data);
+};
+
+
+export const deleteAdminCoupon = (id) => {
+    return api.delete(`/admin/coupons/delete/${id}`);
+};
+
+
+export const toggleAdminCoupon = (id) => {
+    return api.patch(`/admin/coupons/${id}/toggle`);
+};
+
