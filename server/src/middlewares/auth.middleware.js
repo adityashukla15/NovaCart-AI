@@ -30,7 +30,14 @@ if (!token) {
     if (!user) {
         throw new ApiError(404, "User not found");
     }
+    if (user.isBlocked) {
 
+        throw new ApiError(
+            403,
+            "Your account has been blocked by the admin."
+        );
+
+    }
     // Request me user attach karo
     req.user = user;
 

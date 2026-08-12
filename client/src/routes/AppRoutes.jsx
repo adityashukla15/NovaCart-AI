@@ -19,6 +19,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLayout from "../components/admin/AdminLayout";
 import AdminProducts from "../components/admin/AdminProducts";
 import AdminCategories from "../components/admin/AdminCategories";
+import AdminUsers from "../components/admin/AdminUsers";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -181,6 +182,10 @@ const AppRoutes = () => {
     <Route
         path="products"
         element={<AdminProducts />}
+    />
+    <Route
+        path="users"
+        element={<AdminUsers />}
     />
     <Route path="categories" element={<AdminCategories />} />
 </Route>

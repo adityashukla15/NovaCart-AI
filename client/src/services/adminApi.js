@@ -90,21 +90,35 @@ export const restoreProduct = (id) => {
 // USERS
 // ======================================
 
-export const getAllUsers = () => {
+export const getAdminUsers = () => {
     return api.get("/admin/users");
 };
 
 
-export const updateUserRole = (userId, role) => {
-    return api.put(`/admin/update-role/${userId}`, {
-        role,
-    });
+// UPDATE USER ROLE
+
+export const updateUserRole = (
+    userId,
+    role
+) => {
+    return api.put(
+        `/admin/update-role/${userId}`,
+        {
+            role,
+        }
+    );
 };
 
 
-export const toggleUserStatus = (userId) => {
-    return api.put(`/admin/toggle-status/${userId}`);
-};
+// BLOCK / UNBLOCK USER
+
+export const toggleUserStatus = (
+    userId
+) => {
+    return api.put(
+        `/admin/toggle-status/${userId}`
+    );
+};;
 
 
 // ======================================
@@ -185,3 +199,4 @@ export const deleteAdminCategory = (id) => {
         `/categories/delete-category/${id}`
     );
 };
+

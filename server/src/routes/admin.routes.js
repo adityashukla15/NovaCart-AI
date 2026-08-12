@@ -14,7 +14,7 @@ router.get('/order-analytics',authMiddleware,adminMiddleware,getOrderStatusAnaly
 router.get('/category-sales',authMiddleware,adminMiddleware,getCategorySales)
 router.get('/users',authMiddleware,adminMiddleware,getAllUsers)
 router.put('/update-role/:userId',authMiddleware,adminMiddleware,updateUserRole)
-router.put('/toggle-status/:userId',authMiddleware,adminMiddleware,toggleUserStatus)
+router.put('/toggle-status/:id',authMiddleware,adminMiddleware,toggleUserStatus)
 router.get('/orders',authMiddleware,adminMiddleware,getAllOrders)
 router.put('/update-order/:id/status',authMiddleware,adminMiddleware,updateOrderStatus)
 router.get('/products',authMiddleware,adminMiddleware,getAdminProducts)

@@ -321,44 +321,59 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const updateUserRole = asyncHandler(async (req, res) => {
 
-    const { id } = req.params;
-
+    const { userId } = req.params;
     const { role } = req.body;
 
-    if (!["user", "admin"].includes(role)) {
-
-        throw new ApiError(400, "Invalid role");
-
+    // Check user ID
+    if (!userId) {
+        throw new ApiError(
+            400,
+            "User ID is required"
+        );
     }
 
+    // Check role
+    if (!role) {
+        throw new ApiError(
+            400,
+            "Role is required"
+        );
+    }
+
+    // Validate role
+    if (!["user", "admin"].includes(role)) {
+        throw new ApiError(
+            400,
+            "Invalid role"
+        );
+    }
+
+    // Find and update user
     const user = await User.findByIdAndUpdate(
-
-        id,
-
-        { role },
-
-        { new: true }
-
+        userId,
+        {
+            role: role,
+        },
+        {
+            new: true,
+            runValidators: true,
+        }
     ).select("-password");
 
+    // User not found
     if (!user) {
-
-        throw new ApiError(404, "User not found");
-
+        throw new ApiError(
+            404,
+            "User not found"
+        );
     }
 
     return res.status(200).json(
-
         new ApiResponse(
-
             200,
-
             "Role updated successfully",
-
             user
-
         )
-
     );
 
 });
