@@ -696,7 +696,7 @@ const ProductDetails = () => {
                         <img
                             src={image}
                             alt={product.title}
-                            className="h-full max-h-[650px] w-full object-cover"
+                            className="h-full max-h-162.5 w-full object-cover"
                         />
 
                     </div>

@@ -30,6 +30,7 @@ router.patch(
     "/:id",
     authMiddleware,
     adminMiddleware,
+    upload.array("images", 5),
     updateProduct
 );
 

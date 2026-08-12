@@ -16,6 +16,8 @@ import OrderDetails from "../components/OrderDetails";
 import Wishlist from "../components/Wishlist"
 import Profile from "../components/Profile";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminLayout from "../components/admin/AdminLayout";
+import AdminProducts from "../components/admin/AdminProducts";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -167,11 +169,19 @@ const AppRoutes = () => {
     path="/profile"
     element={<Profile />}
 />
-
 <Route
     path="/admin"
-    element={<AdminDashboard />}
-/>
+    element={<AdminLayout />}
+>
+    <Route
+        index
+        element={<AdminDashboard />}
+    />
+    <Route
+        path="products"
+        element={<AdminProducts />}
+    />
+</Route>
         </Routes>
 
     );

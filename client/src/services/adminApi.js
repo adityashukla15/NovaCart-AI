@@ -45,6 +45,36 @@ export const getAdminProducts = () => {
     return api.get("/admin/products");
 };
 
+// Create Product
+export const createAdminProduct = (formData) => {
+    return api.post(
+        "/products/create-product",
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        }
+    );
+};
+
+export const updateAdminProduct = (id, formData) => {
+    return api.patch(
+        `/products/${id}`,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        }
+    );
+};
+// Delete Product
+export const deleteAdminProduct = (id) => {
+    return api.delete(
+        `/products/delete-product/${id}`
+    );
+};
 
 export const toggleFeaturedProduct = (id) => {
     return api.put(`/admin/products/${id}/featured`);
