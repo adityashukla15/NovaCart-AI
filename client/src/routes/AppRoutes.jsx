@@ -29,6 +29,7 @@ import AIChat from "../components/ai/AIChat";
 import SmartSearch from "../components/ai/SmartSearch";
 import CompareProducts from "../components/ai/CompareProducts";
 import ProductSummary from "../components/ai/ProductSummary";
+import OutfitRecommendation from "../components/ai/OutfitRecommendation";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -231,6 +232,10 @@ const AppRoutes = () => {
     path="summary"
     element={<ProductSummary />}
 />
+<Route
+        path="outfit"
+        element={<OutfitRecommendation />}
+    />
    </Route>
         </Routes>
 

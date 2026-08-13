@@ -60,10 +60,10 @@ export const productSummary = (message) => {
 // OUTFIT RECOMMENDATION
 // ==========================================
 
-export const outfitRecommendation = (data) => {
+export const outfitRecommendation = (message) => {
     return api.post(
         "/ai/outfit-recommendation",
-        data
+        { message }
     );
 };
 
