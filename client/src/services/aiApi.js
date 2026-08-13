@@ -51,8 +51,8 @@ export const compareProducts = (message) => {
 // PRODUCT SUMMARY
 // ==========================================
 
-export const productSummary = (data) => {
-    return api.post("/ai/summary", data);
+export const productSummary = (message) => {
+    return api.post("/ai/summary", { message });
 };
 
 
