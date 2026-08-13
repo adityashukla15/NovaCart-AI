@@ -42,8 +42,8 @@ export const clearChat = () => {
 // COMPARE PRODUCTS
 // ==========================================
 
-export const compareProducts = (data) => {
-    return api.post("/ai/compare", data);
+export const compareProducts = (message) => {
+    return api.post("/ai/compare", { message });
 };
 
 

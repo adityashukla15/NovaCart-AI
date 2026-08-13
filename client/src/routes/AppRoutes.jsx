@@ -27,6 +27,7 @@ import AiLayout from "../components/ai/AiLayout";
 import AiHome from "../components/ai/AiHome";
 import AIChat from "../components/ai/AIChat";
 import SmartSearch from "../components/ai/SmartSearch";
+import CompareProducts from "../components/ai/CompareProducts";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -220,6 +221,11 @@ const AppRoutes = () => {
     path="search"
     element={<SmartSearch />}
 />
+
+<Route
+        path="compare"
+        element={<CompareProducts />}
+    />
    </Route>
         </Routes>
 
