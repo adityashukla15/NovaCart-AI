@@ -4,8 +4,8 @@ import api from "./axios";
 // SMART SEARCH
 // ==========================================
 
-export const smartSearch = (data) => {
-    return api.post("/ai/search", data);
+export const smartSearch = (query) => {
+    return api.post("/ai/search", { query });
 };
 
 

@@ -241,10 +241,7 @@ const smartSearch = asyncHandler(async (req, res) => {
 
 
 const chatWithAI = asyncHandler(async (req, res) => {
-    console.log("===== CHAT DEBUG =====");
-console.log("req.user =>", req.user);
-console.log("req.body =>", req.body);
-console.log("======================");
+    
 
     const { message } = req.body;
 

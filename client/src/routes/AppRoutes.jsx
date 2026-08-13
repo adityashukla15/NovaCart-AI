@@ -25,6 +25,8 @@ import AdminOrders from "../components/admin/AdminOrders";
 import AdminAnalytics from "../components/admin/AdminAnalytics";
 import AiLayout from "../components/ai/AiLayout";
 import AiHome from "../components/ai/AiHome";
+import AIChat from "../components/ai/AIChat";
+import SmartSearch from "../components/ai/SmartSearch";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -210,7 +212,14 @@ const AppRoutes = () => {
 </Route>
    <Route path="/ai" element={<AiLayout />}>
     <Route index element={<AiHome />} />
-
+     <Route
+        path="chat"
+        element={<AIChat />}
+    />
+   <Route
+    path="search"
+    element={<SmartSearch />}
+/>
    </Route>
         </Routes>
 
