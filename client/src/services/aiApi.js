@@ -72,9 +72,9 @@ export const outfitRecommendation = (message) => {
 // IMAGE SEARCH
 // ==========================================
 
-export const imageSearch = (data) => {
+export const imageSearch = (message) => {
     return api.post(
         "/ai/image-search",
-        data
+        {message}
     );
 };

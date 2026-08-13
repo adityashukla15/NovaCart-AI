@@ -937,7 +937,6 @@ ${JSON.stringify(outfit)}
     );
 
 });
-
 const imageSearch = asyncHandler(async (req, res) => {
 
     const { message } = req.body;
@@ -1084,6 +1083,7 @@ const imageSearch = asyncHandler(async (req, res) => {
     );
 
 });
+
 
 module.exports = {
     smartSearch,

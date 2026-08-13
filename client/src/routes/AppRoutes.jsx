@@ -30,6 +30,7 @@ import SmartSearch from "../components/ai/SmartSearch";
 import CompareProducts from "../components/ai/CompareProducts";
 import ProductSummary from "../components/ai/ProductSummary";
 import OutfitRecommendation from "../components/ai/OutfitRecommendation";
+import ImageSearch from "../components/ai/ImageSearch";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -235,6 +236,10 @@ const AppRoutes = () => {
 <Route
         path="outfit"
         element={<OutfitRecommendation />}
+    />
+        <Route
+        path="image-search"
+        element={<ImageSearch />}
     />
    </Route>
         </Routes>
