@@ -1065,9 +1065,13 @@ const ProductDetails = () => {
 
                         <div>
 
-                            <h2 className="text-2xl font-bold">
-                                Customer Reviews
-                            </h2>
+                            <div className="flex items-center justify-between gap-4">
+
+                                <h2 className="text-2xl font-bold">
+                                    Customer Reviews
+                                </h2>
+
+                            </div>
 
                             <div className="mt-5 rounded-2xl bg-gray-50 p-6">
 
@@ -1115,6 +1119,22 @@ const ProductDetails = () => {
                                         reviews
 
                                     </p>
+
+                                    {/* ==================================
+                                        PRODUCT REVIEWS NAVIGATION
+                                    ================================== */}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            navigate(
+                                                `/products/${product._id}/reviews`
+                                            )
+                                        }
+                                        className="mt-5 w-full rounded-xl border border-black px-5 py-3 font-medium transition duration-300 hover:bg-black hover:text-white"
+                                    >
+                                        View Product Reviews
+                                    </button>
 
                                 </div>
 

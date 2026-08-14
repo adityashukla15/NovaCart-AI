@@ -272,6 +272,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
         orderStatus: "Pending",
     });
+    
 
     // ======================================
     // 8. REDUCE PRODUCT STOCK

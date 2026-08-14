@@ -50,100 +50,68 @@ const updateProductRating = async (productId) => {
 // ======================================
 
 const createReview = asyncHandler(async (req, res) => {
-
     const { productId } = req.params;
-
     const { rating, review } = req.body;
 
     if (!rating) {
-
         throw new ApiError(400, "Rating is required");
+    }
 
+    if (rating < 1 || rating > 5) {
+        throw new ApiError(400, "Rating must be between 1 and 5");
     }
 
     const product = await Product.findById(productId);
 
     if (!product) {
-
         throw new ApiError(404, "Product not found");
-
     }
 
-    // Purchased or not
     const purchased = await Order.findOne({
-
         user: req.user._id,
-
         "items.product": productId,
-
+        orderStatus: "Delivered",
     });
 
     if (!purchased) {
-
         throw new ApiError(
-
             400,
-
             "Purchase this product before reviewing."
-
         );
-
     }
 
     const alreadyReviewed = await Review.findOne({
-
         user: req.user._id,
-
         product: productId,
-
     });
 
     if (alreadyReviewed) {
-
         throw new ApiError(
-
             400,
-
             "You already reviewed this product"
-
         );
-
     }
 
     const newReview = await Review.create({
-
         product: productId,
-
         user: req.user._id,
-
         rating,
-
-        review,
-
+        review: review?.trim() || "",
     });
 
     await updateProductRating(productId);
 
     const populatedReview = await Review.findById(newReview._id)
-
         .populate("user", "name email")
-
         .populate("product", "title");
 
     return res.status(201).json(
-
         new ApiResponse(
-
             201,
-
             "Review added successfully",
-
             populatedReview
-
         )
-
     );
-
 });
 
 

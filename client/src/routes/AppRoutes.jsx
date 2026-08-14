@@ -31,6 +31,7 @@ import CompareProducts from "../components/ai/CompareProducts";
 import ProductSummary from "../components/ai/ProductSummary";
 import OutfitRecommendation from "../components/ai/OutfitRecommendation";
 import ImageSearch from "../components/ai/ImageSearch";
+import ProductReviews from "../components/product/ProductReview";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -242,6 +243,10 @@ const AppRoutes = () => {
         element={<ImageSearch />}
     />
    </Route>
+   <Route
+    path="/products/:id/reviews"
+    element={<ProductReviews />}
+/>
         </Routes>
 
     );
