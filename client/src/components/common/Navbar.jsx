@@ -9,6 +9,8 @@ import {
     LogOut,
     LayoutDashboard,
     Sparkles,
+    Search,
+    X,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +22,8 @@ const Navbar = () => {
     const { user, logout } = useAuth();
 
     const [profileOpen, setProfileOpen] = useState(false);
+
+    const [search, setSearch] = useState("");
 
 
     // ======================================
@@ -88,6 +92,41 @@ const Navbar = () => {
 
 
     // ======================================
+    // SEARCH PRODUCT
+    // ======================================
+
+    const handleSearch = (e) => {
+
+        e.preventDefault();
+
+        const query = search.trim();
+
+        if (!query) {
+            navigate("/shop");
+            return;
+        }
+
+        navigate(
+            `/shop?search=${encodeURIComponent(query)}`
+        );
+
+    };
+
+
+    // ======================================
+    // CLEAR SEARCH
+    // ======================================
+
+    const clearSearch = () => {
+
+        setSearch("");
+
+        navigate("/shop");
+
+    };
+
+
+    // ======================================
     // RENDER
     // ======================================
 
@@ -95,7 +134,8 @@ const Navbar = () => {
 
         <nav className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-md">
 
-            <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6">
+            <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+
 
                 {/* ==================================
                     LOGO
@@ -103,12 +143,15 @@ const Navbar = () => {
 
                 <Link
                     to="/"
-                    className="group flex items-center gap-2"
+                    className="group flex shrink-0 items-center gap-2"
                 >
 
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm transition duration-200 group-hover:scale-105">
+
                         <ShoppingCart size={18} />
+
                     </div>
+
 
                     <div className="hidden sm:block">
 
@@ -129,7 +172,7 @@ const Navbar = () => {
                     NAV LINKS
                 ================================== */}
 
-                <div className="hidden items-center gap-7 md:flex">
+                <div className="hidden items-center gap-6 lg:flex">
 
                     <Link
                         to="/"
@@ -166,10 +209,71 @@ const Navbar = () => {
 
 
                 {/* ==================================
+                    SEARCH BAR
+                ================================== */}
+
+                <form
+                    onSubmit={handleSearch}
+                    className="relative hidden flex-1 md:block md:max-w-sm lg:max-w-md"
+                >
+
+                    <Search
+                        size={18}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+
+
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(e.target.value)
+                        }
+                        placeholder="Search products..."
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-10 text-sm text-gray-900 outline-none transition focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-100"
+                    />
+
+
+                    {search && (
+
+                        <button
+                            type="button"
+                            onClick={clearSearch}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-900"
+                            aria-label="Clear search"
+                        >
+
+                            <X size={16} />
+
+                        </button>
+
+                    )}
+
+                </form>
+
+
+                {/* ==================================
                     RIGHT SIDE
                 ================================== */}
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+
+
+                    {/* ==================================
+                        MOBILE SEARCH
+                    ================================== */}
+
+                    <button
+                        type="button"
+                        title="Search"
+                        aria-label="Search"
+                        onClick={() => navigate("/shop")}
+                        className="rounded-xl p-2.5 text-gray-600 transition duration-200 hover:bg-gray-100 hover:text-gray-900 md:hidden"
+                    >
+
+                        <Search size={20} />
+
+                    </button>
 
 
                     {/* ==================================
@@ -304,8 +408,11 @@ const Navbar = () => {
                                         <div className="flex items-center gap-3">
 
                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white">
+
                                                 <User size={18} />
+
                                             </div>
+
 
                                             <div className="min-w-0">
 
@@ -478,6 +585,51 @@ const Navbar = () => {
                     )}
 
                 </div>
+
+            </div>
+
+
+            {/* ==================================
+                MOBILE SEARCH BAR
+            ================================== */}
+
+            <div className="border-t border-gray-100 px-4 py-3 md:hidden">
+
+                <form
+                    onSubmit={handleSearch}
+                    className="relative"
+                >
+
+                    <Search
+                        size={18}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(e.target.value)
+                        }
+                        placeholder="Search products..."
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-100"
+                    />
+
+                    {search && (
+
+                        <button
+                            type="button"
+                            onClick={clearSearch}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900"
+                        >
+
+                            <X size={16} />
+
+                        </button>
+
+                    )}
+
+                </form>
 
             </div>
 

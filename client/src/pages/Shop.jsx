@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { getAllProducts } from "../services/productApi";
 
@@ -13,6 +14,16 @@ const Shop = () => {
 
     const [error, setError] = useState("");
 
+    const [searchParams] = useSearchParams();
+
+
+    // ======================================
+    // GET SEARCH QUERY
+    // ======================================
+
+    const searchQuery =
+        searchParams.get("search")?.trim().toLowerCase() || "";
+
 
     // ======================================
     // FETCH PRODUCTS
@@ -26,7 +37,8 @@ const Shop = () => {
 
             setError("");
 
-            const response = await getAllProducts();
+            const response =
+                await getAllProducts();
 
             console.log(
                 "Products API:",
@@ -34,7 +46,9 @@ const Shop = () => {
             );
 
 
-            // Backend response handle
+            // ======================================
+            // BACKEND RESPONSE HANDLE
+            // ======================================
 
             const productData =
                 response.data?.data?.products ||
@@ -42,7 +56,12 @@ const Shop = () => {
                 [];
 
 
-            setProducts(productData);
+            setProducts(
+                Array.isArray(productData)
+                    ? productData
+                    : []
+            );
+
 
         } catch (error) {
 
@@ -78,6 +97,65 @@ const Shop = () => {
 
 
     // ======================================
+    // FILTER PRODUCTS
+    // ======================================
+
+    const filteredProducts = useMemo(() => {
+
+        // No search query
+        if (!searchQuery) {
+
+            return products;
+
+        }
+
+
+        return products.filter((product) => {
+
+            const title =
+                product?.title
+                    ?.toLowerCase() || "";
+
+
+            const description =
+                product?.description
+                    ?.toLowerCase() || "";
+
+
+            const brand =
+                product?.brand
+                    ?.toLowerCase() || "";
+
+
+            const category =
+                typeof product?.category === "string"
+                    ? product.category.toLowerCase()
+                    : product?.category?.name
+                        ?.toLowerCase() || "";
+
+
+            const keywords =
+                Array.isArray(product?.keywords)
+                    ? product.keywords
+                        .join(" ")
+                        .toLowerCase()
+                    : "";
+
+
+            return (
+                title.includes(searchQuery) ||
+                description.includes(searchQuery) ||
+                brand.includes(searchQuery) ||
+                category.includes(searchQuery) ||
+                keywords.includes(searchQuery)
+            );
+
+        });
+
+    }, [products, searchQuery]);
+
+
+    // ======================================
     // LOADING
     // ======================================
 
@@ -85,7 +163,7 @@ const Shop = () => {
 
         return (
 
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center">
 
                 <p className="text-lg text-gray-600">
                     Loading products...
@@ -106,7 +184,7 @@ const Shop = () => {
 
         return (
 
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center">
 
                 <p className="text-red-500">
                     {error}
@@ -130,24 +208,103 @@ const Shop = () => {
             <div className="mx-auto max-w-7xl">
 
 
-                {/* ================= HEADER ================= */}
+                {/* ======================================
+                    HEADER
+                ====================================== */}
 
                 <div className="mb-8">
 
-                    <h1 className="text-3xl font-bold">
-                        Shop
-                    </h1>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 
-                    <p className="mt-2 text-gray-500">
-                        Explore our latest products
-                    </p>
+                        <div>
+
+                            <h1 className="text-3xl font-bold">
+
+                                {searchQuery
+                                    ? `Search results for "${searchQuery}"`
+                                    : "Shop"
+                                }
+
+                            </h1>
+
+
+                            <p className="mt-2 text-gray-500">
+
+                                {searchQuery
+                                    ? `${filteredProducts.length} product${
+                                        filteredProducts.length !== 1
+                                            ? "s"
+                                            : ""
+                                    } found`
+                                    : "Explore our latest products"
+                                }
+
+                            </p>
+
+                        </div>
+
+
+                        {/* PRODUCT COUNT */}
+
+                        {!searchQuery && (
+
+                            <p className="text-sm text-gray-500">
+
+                                {products.length} products
+
+                            </p>
+
+                        )}
+
+                    </div>
 
                 </div>
 
 
-                {/* ================= PRODUCTS ================= */}
+                {/* ======================================
+                    SEARCH RESULT
+                ====================================== */}
 
-                {products.length === 0 ? (
+                {searchQuery && filteredProducts.length === 0 ? (
+
+                    <div className="rounded-2xl border border-gray-100 bg-gray-50 py-20 text-center">
+
+                        <div className="mx-auto max-w-md">
+
+                            <h2 className="text-xl font-semibold text-gray-900">
+
+                                No products found
+
+                            </h2>
+
+
+                            <p className="mt-2 text-sm text-gray-500">
+
+                                We couldn't find any products matching
+
+                                <span className="font-semibold text-gray-700">
+                                    {" "} "{searchQuery}"
+                                </span>
+
+                            </p>
+
+
+                            <button
+                                onClick={() =>
+                                    window.history.back()
+                                }
+                                className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+                            >
+
+                                Go Back
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                ) : filteredProducts.length === 0 ? (
 
                     <div className="py-20 text-center">
 
@@ -159,9 +316,13 @@ const Shop = () => {
 
                 ) : (
 
+                    /* ======================================
+                        PRODUCTS
+                    ====================================== */
+
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
-                        {products.map((product) => (
+                        {filteredProducts.map((product) => (
 
                             <ProductCard
                                 key={product._id}
