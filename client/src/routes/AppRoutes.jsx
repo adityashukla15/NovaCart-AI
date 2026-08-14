@@ -16,6 +16,7 @@ import MyOrders from "../components/MyOrders";
 import OrderDetails from "../components/OrderDetails";
 import Wishlist from "../components/Wishlist";
 import Profile from "../components/Profile";
+import ForgotPassword from "../pages/ForgotPassword";
 
 // Admin
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -125,6 +126,11 @@ const AppRoutes = () => {
                         </PublicRoute>
                     }
                 />
+
+                <Route
+    path="/forgot-password"
+    element={<ForgotPassword />}
+/>
 
             </Route>
 
