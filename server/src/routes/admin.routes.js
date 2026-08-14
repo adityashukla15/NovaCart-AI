@@ -4,7 +4,7 @@ const router=express.Router()
 
 const adminMiddleware=require('../middlewares/admin.middleware')
 
-const {getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus}=require('../controllers/admin.controller')
+const {getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,getAllReturnRequests,updatePaymentStatus}=require('../controllers/admin.controller')
 const {createCoupon,getAllCoupons,updateCoupon,deleteCoupon,toggleCoupon,}=require('../controllers/coupon.controller')
 
 
@@ -33,18 +33,18 @@ router.patch(
 );
 
 
-router.patch(
-    "/orders/:id/return",
+router.get(
+    "/returns",
     authMiddleware,
     adminMiddleware,
-    updateReturnStatus
+    getAllReturnRequests
 );
 
 router.patch(
-    "/orders/:id/refund",
+    "/returns/:id/status",
     authMiddleware,
     adminMiddleware,
-    processRefund
+    updateReturnStatus
 );
 
 router.put(

@@ -733,20 +733,48 @@ const cancelOrder = asyncHandler(async (req, res) => {
 // REQUEST RETURN - USER
 // ======================================
 
+// ======================================
+// REQUEST RETURN / EXCHANGE - USER
+// ======================================
+
 const requestReturn = asyncHandler(async (req, res) => {
+
     const { id } = req.params;
-    const { reason } = req.body;
+
+    const {
+        reason,
+        description,
+        returnType = "Return",
+    } = req.body;
+
+
+    // ======================================
+    // VALIDATE RETURN TYPE
+    // ======================================
+
+    if (!["Return", "Exchange"].includes(returnType)) {
+
+        throw new ApiError(
+            400,
+            "Invalid return type"
+        );
+
+    }
+
 
     // ======================================
     // VALIDATE REASON
     // ======================================
 
     if (!reason || !reason.trim()) {
+
         throw new ApiError(
             400,
             "Return reason is required"
         );
+
     }
+
 
     // ======================================
     // FIND ORDER
@@ -757,37 +785,48 @@ const requestReturn = asyncHandler(async (req, res) => {
         user: req.user._id,
     });
 
+
     if (!order) {
+
         throw new ApiError(
             404,
             "Order not found"
         );
+
     }
+
 
     // ======================================
     // ONLY DELIVERED ORDERS
     // ======================================
 
     if (order.orderStatus !== "Delivered") {
+
         throw new ApiError(
             400,
-            "Only delivered orders can be returned"
+            "Only delivered orders can be returned or exchanged"
         );
+
     }
 
+
     // ======================================
-    // CHECK EXISTING RETURN
+    // CHECK EXISTING REQUEST
     // ======================================
 
     if (
-        order.returnStatus !==
-        "Not Requested"
+        order.returnStatus &&
+        order.returnStatus !== "Not Requested" &&
+        order.returnStatus !== "Rejected"
     ) {
+
         throw new ApiError(
             400,
-            "Return has already been requested"
+            "Return or exchange request already exists"
         );
+
     }
+
 
     // ======================================
     // UPDATE RETURN
@@ -795,43 +834,81 @@ const requestReturn = asyncHandler(async (req, res) => {
 
     order.returnStatus = "Requested";
 
+    order.returnType = returnType;
+
     order.returnReason = reason.trim();
 
-    order.refundStatus = "Pending";
+    order.returnDescription =
+        description?.trim() || "";
 
     order.refundAmount =
-        order.totalAmount;
+        returnType === "Return"
+            ? order.totalAmount
+            : 0;
+
+    order.refundStatus =
+        returnType === "Return"
+            ? "Pending"
+            : "Not Applicable";
+
+    order.returnRequestedAt = new Date();
+
+    // Reset old timestamps if request was rejected earlier
+
+    order.returnAcceptedAt = null;
+
+    order.returnedAt = null;
+
+    order.refundInitiatedAt = null;
+
+    order.refundCompletedAt = null;
+
+    order.exchangedAt = null;
+
+    order.returnRejectedAt = null;
+
 
     await order.save();
 
+
     // ======================================
-    // CREATE NOTIFICATION
+    // NOTIFICATION
     // ======================================
 
     await createNotification({
+
         user: req.user._id,
 
-        title: "Return Requested ↩️",
+        title: `${returnType} Request Submitted ↩️`,
 
         message:
-            `Your return request for order ${order.orderId} has been submitted successfully.`,
+            `Your ${returnType.toLowerCase()} request for order ${order.orderId} has been submitted successfully.`,
 
         type: "return",
 
         relatedOrder: order._id,
+
     });
+
 
     // ======================================
     // RESPONSE
     // ======================================
 
     return res.status(200).json(
+
         new ApiResponse(
+
             200,
-            "Return request submitted successfully",
+
+            `${returnType} request submitted successfully`,
+
             order
+
         )
+
     );
+
 });
 
 // ======================================

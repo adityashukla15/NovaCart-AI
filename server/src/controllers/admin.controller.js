@@ -658,120 +658,457 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
 
 });
 
-const updateReturnStatus = asyncHandler(async (req, res) => {
+// ======================================
+// GET ALL RETURN / EXCHANGE REQUESTS
+// ======================================
 
-    const { id } = req.params;
-    const { returnStatus } = req.body;
+const getAllReturnRequests = asyncHandler(
+    async (req, res) => {
 
-    const allowedStatuses = [
-        "Approved",
-        "Rejected",
-    ];
+        const returns = await Order.find({
+            returnStatus: {
+                $ne: "Not Requested",
+            },
+        })
+            .populate(
+                "user",
+                "name email"
+            )
+            .populate(
+                "items.product",
+                "title images price"
+            )
+            .sort({
+                returnRequestedAt: -1,
+                createdAt: -1,
+            });
 
-    if (!allowedStatuses.includes(returnStatus)) {
-        throw new ApiError(
-            400,
-            "Invalid return status"
+
+        return res.status(200).json(
+
+            new ApiResponse(
+
+                200,
+
+                "Return requests fetched successfully",
+
+                returns
+
+            )
+
         );
+
     }
+);
 
-    const order = await Order.findById(id);
+// ======================================
+// UPDATE RETURN STATUS - ADMIN
+// ======================================
 
-    if (!order) {
-        throw new ApiError(
-            404,
-            "Order not found"
+const updateReturnStatus = asyncHandler(
+    async (req, res) => {
+
+        const { id } = req.params;
+
+        const { status } = req.body;
+
+
+        // ======================================
+        // VALID STATUSES
+        // ======================================
+
+        const allowedStatuses = [
+            "Accepted",
+            "Rejected",
+            "Returned",
+            "Refund Initiated",
+            "Refund Completed",
+            "Exchanged",
+        ];
+
+
+        if (
+            !allowedStatuses.includes(status)
+        ) {
+
+            throw new ApiError(
+                400,
+                "Invalid return status"
+            );
+
+        }
+
+
+        // ======================================
+        // FIND ORDER
+        // ======================================
+
+        const order =
+            await Order.findById(id);
+
+
+        if (!order) {
+
+            throw new ApiError(
+                404,
+                "Order not found"
+            );
+
+        }
+
+
+        // ======================================
+        // REQUEST MUST EXIST
+        // ======================================
+
+        if (
+            order.returnStatus ===
+            "Not Requested"
+        ) {
+
+            throw new ApiError(
+                400,
+                "No return request exists"
+            );
+
+        }
+
+
+        const current =
+            order.returnStatus;
+
+
+        // ======================================
+        // VALID TRANSITIONS
+        // ======================================
+
+        const transitions = {
+
+            Requested: [
+                "Accepted",
+                "Rejected",
+            ],
+
+            Accepted: [
+                "Returned",
+            ],
+
+            Returned: [
+                "Refund Initiated",
+                "Exchanged",
+            ],
+
+            "Refund Initiated": [
+                "Refund Completed",
+            ],
+
+            Rejected: [],
+
+            "Refund Completed": [],
+
+            Exchanged: [],
+
+        };
+
+
+        if (
+            !transitions[current]?.includes(
+                status
+            )
+        ) {
+
+            throw new ApiError(
+                400,
+                `Cannot change return status from ${current} to ${status}`
+            );
+
+        }
+
+
+        // ======================================
+        // ACCEPTED
+        // ======================================
+
+        if (status === "Accepted") {
+
+            order.returnStatus =
+                "Accepted";
+
+            order.returnAcceptedAt =
+                new Date();
+
+            if (
+                order.returnType ===
+                "Return"
+            ) {
+
+                order.refundStatus =
+                    "Pending";
+
+            }
+
+        }
+
+
+        // ======================================
+        // REJECTED
+        // ======================================
+
+        if (status === "Rejected") {
+
+            order.returnStatus =
+                "Rejected";
+
+            order.returnRejectedAt =
+                new Date();
+
+            order.refundStatus =
+                "Not Applicable";
+
+            order.refundAmount = 0;
+
+        }
+
+
+        // ======================================
+        // RETURNED
+        // ======================================
+
+        if (status === "Returned") {
+
+            order.returnStatus =
+                "Returned";
+
+            order.returnedAt =
+                new Date();
+
+        }
+
+
+        // ======================================
+        // REFUND INITIATED
+        // ======================================
+
+        if (
+            status ===
+            "Refund Initiated"
+        ) {
+
+            if (
+                order.returnType !==
+                "Return"
+            ) {
+
+                throw new ApiError(
+                    400,
+                    "Refund is only available for return requests"
+                );
+
+            }
+
+            order.returnStatus =
+                "Refund Initiated";
+
+            order.refundStatus =
+                "Initiated";
+
+            order.refundInitiatedAt =
+                new Date();
+
+        }
+
+
+        // ======================================
+        // REFUND COMPLETED
+        // ======================================
+
+        if (
+            status ===
+            "Refund Completed"
+        ) {
+
+            if (
+                order.refundStatus !==
+                "Initiated"
+            ) {
+
+                throw new ApiError(
+                    400,
+                    "Refund must be initiated first"
+                );
+
+            }
+
+            order.returnStatus =
+                "Refund Completed";
+
+            order.refundStatus =
+                "Completed";
+
+            order.refundCompletedAt =
+                new Date();
+
+            order.paymentStatus =
+                "Refunded";
+
+        }
+
+
+        // ======================================
+        // EXCHANGED
+        // ======================================
+
+        if (status === "Exchanged") {
+
+            if (
+                order.returnType !==
+                "Exchange"
+            ) {
+
+                throw new ApiError(
+                    400,
+                    "Only exchange requests can be marked as exchanged"
+                );
+
+            }
+
+            order.returnStatus =
+                "Exchanged";
+
+            order.exchangedAt =
+                new Date();
+
+        }
+
+
+        await order.save();
+
+
+        // ======================================
+        // NOTIFICATION MESSAGE
+        // ======================================
+
+        let title =
+            "Return Status Updated";
+
+        let message =
+            `Your return request for order ${order.orderId} is now ${status}.`;
+
+
+        if (status === "Accepted") {
+
+            title =
+                "Return Request Accepted ✅";
+
+            message =
+                `Your ${order.returnType.toLowerCase()} request for order ${order.orderId} has been accepted.`;
+
+        }
+
+
+        if (status === "Rejected") {
+
+            title =
+                "Return Request Rejected ❌";
+
+            message =
+                `Your return request for order ${order.orderId} has been rejected.`;
+
+        }
+
+
+        if (status === "Returned") {
+
+            title =
+                "Item Returned 📦";
+
+            message =
+                `Your returned item for order ${order.orderId} has been received.`;
+
+        }
+
+
+        if (
+            status ===
+            "Refund Initiated"
+        ) {
+
+            title =
+                "Refund Initiated 💳";
+
+            message =
+                `Your refund of ₹${order.refundAmount} for order ${order.orderId} has been initiated.`;
+
+        }
+
+
+        if (
+            status ===
+            "Refund Completed"
+        ) {
+
+            title =
+                "Refund Completed 🎉";
+
+            message =
+                `Your refund of ₹${order.refundAmount} for order ${order.orderId} has been completed.`;
+
+        }
+
+
+        if (status === "Exchanged") {
+
+            title =
+                "Exchange Completed 🔄";
+
+            message =
+                `Your exchange for order ${order.orderId} has been completed.`;
+
+        }
+
+
+        await createNotification({
+
+            user: order.user,
+
+            title,
+
+            message,
+
+            type:
+                status.includes("Refund")
+                    ? "refund"
+                    : "return",
+
+            relatedOrder:
+                order._id,
+
+        });
+
+
+        return res.status(200).json(
+
+            new ApiResponse(
+
+                200,
+
+                `Return status updated to ${status}`,
+
+                order
+
+            )
+
         );
-    }
-
-    if (order.returnStatus !== "Requested") {
-        throw new ApiError(
-            400,
-            "No pending return request"
-        );
-    }
-
-    if (returnStatus === "Approved") {
-
-        order.returnStatus = "Approved";
-
-        order.refundStatus = "Pending";
-
-        order.refundAmount =
-            order.totalAmount;
 
     }
-
-    if (returnStatus === "Rejected") {
-
-        order.returnStatus = "Rejected";
-
-        order.refundStatus =
-            "Not Applicable";
-
-        order.refundAmount = 0;
-
-    }
-
-    await order.save();
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            `Return request ${returnStatus.toLowerCase()} successfully`,
-            order
-        )
-    );
-
-});
+);
 
 // ======================================
 // PROCESS REFUND (ADMIN)
 // ======================================
 
-const processRefund = asyncHandler(async (req, res) => {
 
-    const { id } = req.params;
-
-    const order = await Order.findById(id);
-
-    if (!order) {
-        throw new ApiError(
-            404,
-            "Order not found"
-        );
-    }
-
-    if (order.returnStatus !== "Approved") {
-        throw new ApiError(
-            400,
-            "Return must be approved first"
-        );
-    }
-
-    if (order.refundStatus === "Processed") {
-        throw new ApiError(
-            400,
-            "Refund is already processed"
-        );
-    }
-
-    order.refundStatus = "Processed";
-
-    order.returnStatus = "Refunded";
-
-    await order.save();
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            "Refund processed successfully",
-            order
-        )
-    );
-
-});
 
 module.exports = {
-    getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updateReturnStatus,processRefund,updatePaymentStatus,
+    getDashboard,getMonthlySales,getOrderAnalytics,getCategorySales,getAllUsers,updateUserRole,toggleUserStatus,getAllOrders,updateOrderStatus,getAdminProducts,toggleFeaturedProduct,restoreProduct,updatePaymentStatus,getAllReturnRequests,updateReturnStatus
 };

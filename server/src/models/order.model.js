@@ -130,15 +130,28 @@ const orderSchema = new mongoose.Schema(
     enum: [
         "Not Requested",
         "Requested",
-        "Approved",
+        "Accepted",
         "Rejected",
-        "Refund Pending",
-        "Refunded"
+        "Returned",
+        "Refund Initiated",
+        "Refund Completed",
+        "Exchanged",
     ],
     default: "Not Requested",
 },
 
+returnType: {
+    type: String,
+    enum: ["Return", "Exchange"],
+    default: "Return",
+},
+
 returnReason: {
+    type: String,
+    default: "",
+},
+
+returnDescription: {
     type: String,
     default: "",
 },
@@ -148,7 +161,8 @@ refundStatus: {
     enum: [
         "Not Applicable",
         "Pending",
-        "Processed"
+        "Initiated",
+        "Completed",
     ],
     default: "Not Applicable",
 },
@@ -156,6 +170,41 @@ refundStatus: {
 refundAmount: {
     type: Number,
     default: 0,
+},
+
+returnRequestedAt: {
+    type: Date,
+    default: null,
+},
+
+returnAcceptedAt: {
+    type: Date,
+    default: null,
+},
+
+returnedAt: {
+    type: Date,
+    default: null,
+},
+
+refundInitiatedAt: {
+    type: Date,
+    default: null,
+},
+
+refundCompletedAt: {
+    type: Date,
+    default: null,
+},
+
+exchangedAt: {
+    type: Date,
+    default: null,
+},
+
+returnRejectedAt: {
+    type: Date,
+    default: null,
 },
 
 subtotal: {

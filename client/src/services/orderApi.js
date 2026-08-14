@@ -21,8 +21,18 @@ export const cancelOrder = (id) => {
 };
 
 // Request return
-export const requestReturn = (id, data) => {
-    return api.post(`/orders/${id}/return`, data);
+// ======================================
+// REQUEST RETURN / EXCHANGE
+// ======================================
+
+export const requestReturn = (
+    id,
+    data
+) => {
+    return api.post(
+        `/orders/${id}/return`,
+        data
+    );
 };
 
 export const applyCoupon = (data) => {

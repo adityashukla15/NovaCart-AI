@@ -9,7 +9,9 @@ import {
     Tags,
     BarChart3,
     ArrowLeft,
+    RotateCcw,
 } from "lucide-react";
+
 
 const AdminSidebar = () => {
 
@@ -20,31 +22,43 @@ const AdminSidebar = () => {
             icon: LayoutDashboard,
             end: true,
         },
+
         {
             name: "Products",
             path: "/admin/products",
             icon: Package,
         },
+
         {
             name: "Categories",
             path: "/admin/categories",
             icon: Tags,
         },
+
         {
             name: "Orders",
             path: "/admin/orders",
             icon: ShoppingBag,
         },
+
+        {
+            name: "Returns & Refunds",
+            path: "/admin/returns",
+            icon: RotateCcw,
+        },
+
         {
             name: "Users",
             path: "/admin/users",
             icon: Users,
         },
+
         {
             name: "Coupons",
             path: "/admin/coupons",
             icon: Ticket,
         },
+
         {
             name: "Analytics",
             path: "/admin/analytics",
@@ -52,10 +66,13 @@ const AdminSidebar = () => {
         },
     ];
 
-    return (
-        <aside className="hidden min-h-screen w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
 
-            {/* LOGO */}
+    return (
+        <aside className="hidden min-h-screen w-64 shrink-0 border-r border-gray-200 bg-white lg:flex lg:flex-col">
+
+            {/* =========================================
+                LOGO
+            ========================================= */}
 
             <div className="border-b border-gray-200 px-6 py-6">
 
@@ -70,9 +87,11 @@ const AdminSidebar = () => {
             </div>
 
 
-            {/* NAVIGATION */}
+            {/* =========================================
+                NAVIGATION
+            ========================================= */}
 
-            <nav className="space-y-1 p-4">
+            <nav className="flex-1 space-y-1 overflow-y-auto p-4">
 
                 {links.map((link) => {
 
@@ -86,7 +105,7 @@ const AdminSidebar = () => {
                             className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
                                     isActive
-                                        ? "bg-black text-white"
+                                        ? "bg-black text-white shadow-sm"
                                         : "text-gray-600 hover:bg-gray-100 hover:text-black"
                                 }`
                             }
@@ -94,7 +113,9 @@ const AdminSidebar = () => {
 
                             <Icon size={19} />
 
-                            {link.name}
+                            <span>
+                                {link.name}
+                            </span>
 
                         </NavLink>
                     );
@@ -104,9 +125,11 @@ const AdminSidebar = () => {
             </nav>
 
 
-            {/* BACK TO STORE */}
+            {/* =========================================
+                BACK TO STORE
+            ========================================= */}
 
-            <div className="mt-auto border-t border-gray-200 p-4">
+            <div className="border-t border-gray-200 p-4">
 
                 <NavLink
                     to="/"
@@ -115,7 +138,9 @@ const AdminSidebar = () => {
 
                     <ArrowLeft size={19} />
 
-                    Back to Store
+                    <span>
+                        Back to Store
+                    </span>
 
                 </NavLink>
 
@@ -124,5 +149,6 @@ const AdminSidebar = () => {
         </aside>
     );
 };
+
 
 export default AdminSidebar;
