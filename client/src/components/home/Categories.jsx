@@ -1,31 +1,64 @@
+import { useEffect, useState } from "react";
+
 import Container from "../ui/Container";
 import SectionHeading from "../ui/SectionHeading";
 import CategoryCard from "./CategoryCard";
 
-import { categories } from "../../data/categoryData";
+import { getAllCategories } from "../../services/categoryApi";
 
 const Categories = () => {
-  return (
-    <section className="py-24">
-      <Container>
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-        <SectionHeading
-          title="Shop by Categories"
-          subtitle="Browse our most popular collections."
-        />
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await getAllCategories();
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-            />
-          ))}
-        </div>
+                setCategories(response.data.data || []);
 
-      </Container>
-    </section>
-  );
+            } catch (error) {
+                console.error(
+                    "Failed to fetch categories:",
+                    error
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    return (
+        <section className="py-24">
+            <Container>
+
+                <SectionHeading
+                    title="Shop by Categories"
+                    subtitle="Browse our most popular collections."
+                />
+
+                {loading ? (
+                    <div className="mt-12 text-center">
+                        Loading categories...
+                    </div>
+                ) : (
+                    <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+                        {categories.map((category) => (
+                            <CategoryCard
+                                key={category._id}
+                                category={category}
+                            />
+                        ))}
+
+                    </div>
+                )}
+
+            </Container>
+        </section>
+    );
 };
 
 export default Categories;

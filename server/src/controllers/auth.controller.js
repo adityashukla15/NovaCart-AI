@@ -69,21 +69,31 @@ const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        throw new ApiError(400, "Email and password are required");
+        throw new ApiError(
+            400,
+            "Email and password are required"
+        );
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await User.findOne({
+        email: normalizedEmail,
+    });
 
     if (!user) {
-        throw new ApiError(404, "User not found");
+        throw new ApiError(
+            401,
+            "Invalid email or password"
+        );
     }
 
     if (user.isBlocked) {
-    throw new ApiError(
-        403,
-        "Your account has been blocked by the admin."
-    );
-}
+        throw new ApiError(
+            403,
+            "Your account has been blocked by the admin."
+        );
+    }
 
     const isMatch = await bcrypt.compare(
         password,
@@ -91,7 +101,17 @@ const login = asyncHandler(async (req, res) => {
     );
 
     if (!isMatch) {
-        throw new ApiError(401, "Invalid credentials");
+        throw new ApiError(
+            401,
+            "Invalid email or password"
+        );
+    }
+
+    if (!process.env.JWT_SECRET) {
+        throw new ApiError(
+            500,
+            "JWT configuration is missing"
+        );
     }
 
     const token = jwt.sign(
@@ -100,12 +120,16 @@ const login = asyncHandler(async (req, res) => {
         { expiresIn: "7d" }
     );
 
-   res.cookie("accessToken", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    res.cookie("accessToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite:
+            process.env.NODE_ENV === "production"
+                ? "none"
+                : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+    });
 
     const userData = {
         _id: user._id,
@@ -115,15 +139,13 @@ const login = asyncHandler(async (req, res) => {
         avatar: user.avatar,
     };
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                "Login successful",
-                userData
-            )
-        );
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Login successful",
+            userData
+        )
+    );
 });
 const logout = asyncHandler(async (req, res) => {
 
