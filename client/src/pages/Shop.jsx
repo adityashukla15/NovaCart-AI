@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { getAllProducts } from "../services/productApi";
-
 import ProductCard from "../components/product/ProductCard";
 
 
@@ -18,11 +17,14 @@ const Shop = () => {
 
 
     // ======================================
-    // GET SEARCH QUERY
+    // GET SEARCH + CATEGORY QUERY
     // ======================================
 
     const searchQuery =
         searchParams.get("search")?.trim().toLowerCase() || "";
+
+    const categoryQuery =
+        searchParams.get("category")?.trim().toLowerCase() || "";
 
 
     // ======================================
@@ -37,8 +39,7 @@ const Shop = () => {
 
             setError("");
 
-            const response =
-                await getAllProducts();
+            const response = await getAllProducts();
 
             console.log(
                 "Products API:",
@@ -98,19 +99,45 @@ const Shop = () => {
 
     // ======================================
     // FILTER PRODUCTS
+    // SEARCH + CATEGORY
     // ======================================
 
     const filteredProducts = useMemo(() => {
 
-        // No search query
-        if (!searchQuery) {
-
-            return products;
-
-        }
-
-
         return products.filter((product) => {
+
+
+            // ======================================
+            // PRODUCT CATEGORY
+            // ======================================
+
+            const category =
+                typeof product?.category === "string"
+                    ? product.category.toLowerCase()
+                    : product?.category?.name
+                        ?.toLowerCase() || "";
+
+
+            // ======================================
+            // CATEGORY FILTER
+            // ======================================
+
+            const matchesCategory =
+                !categoryQuery ||
+                category === categoryQuery ||
+                category.includes(categoryQuery);
+
+
+            // ======================================
+            // SEARCH FILTER
+            // ======================================
+
+            if (!searchQuery) {
+
+                return matchesCategory;
+
+            }
+
 
             const title =
                 product?.title
@@ -127,13 +154,6 @@ const Shop = () => {
                     ?.toLowerCase() || "";
 
 
-            const category =
-                typeof product?.category === "string"
-                    ? product.category.toLowerCase()
-                    : product?.category?.name
-                        ?.toLowerCase() || "";
-
-
             const keywords =
                 Array.isArray(product?.keywords)
                     ? product.keywords
@@ -142,17 +162,26 @@ const Shop = () => {
                     : "";
 
 
-            return (
+            const matchesSearch =
                 title.includes(searchQuery) ||
                 description.includes(searchQuery) ||
                 brand.includes(searchQuery) ||
                 category.includes(searchQuery) ||
-                keywords.includes(searchQuery)
+                keywords.includes(searchQuery);
+
+
+            return (
+                matchesCategory &&
+                matchesSearch
             );
 
         });
 
-    }, [products, searchQuery]);
+    }, [
+        products,
+        searchQuery,
+        categoryQuery
+    ]);
 
 
     // ======================================
@@ -198,6 +227,56 @@ const Shop = () => {
 
 
     // ======================================
+    // PAGE TITLE
+    // ======================================
+
+    const getPageTitle = () => {
+
+        if (searchQuery && categoryQuery) {
+
+            return `Search results in ${categoryQuery}`;
+
+        }
+
+        if (searchQuery) {
+
+            return `Search results for "${searchQuery}"`;
+
+        }
+
+        if (categoryQuery) {
+
+            return `${categoryQuery} Products`;
+
+        }
+
+        return "Shop";
+
+    };
+
+
+    // ======================================
+    // PAGE DESCRIPTION
+    // ======================================
+
+    const getPageDescription = () => {
+
+        if (searchQuery || categoryQuery) {
+
+            return `${filteredProducts.length} product${
+                filteredProducts.length !== 1
+                    ? "s"
+                    : ""
+            } found`;
+
+        }
+
+        return "Explore our latest products";
+
+    };
+
+
+    // ======================================
     // SHOP PAGE
     // ======================================
 
@@ -218,26 +297,16 @@ const Shop = () => {
 
                         <div>
 
-                            <h1 className="text-3xl font-bold">
+                            <h1 className="text-3xl font-bold capitalize">
 
-                                {searchQuery
-                                    ? `Search results for "${searchQuery}"`
-                                    : "Shop"
-                                }
+                                {getPageTitle()}
 
                             </h1>
 
 
                             <p className="mt-2 text-gray-500">
 
-                                {searchQuery
-                                    ? `${filteredProducts.length} product${
-                                        filteredProducts.length !== 1
-                                            ? "s"
-                                            : ""
-                                    } found`
-                                    : "Explore our latest products"
-                                }
+                                {getPageDescription()}
 
                             </p>
 
@@ -246,15 +315,11 @@ const Shop = () => {
 
                         {/* PRODUCT COUNT */}
 
-                        {!searchQuery && (
+                        <p className="text-sm text-gray-500">
 
-                            <p className="text-sm text-gray-500">
+                            {filteredProducts.length} products
 
-                                {products.length} products
-
-                            </p>
-
-                        )}
+                        </p>
 
                     </div>
 
@@ -262,10 +327,10 @@ const Shop = () => {
 
 
                 {/* ======================================
-                    SEARCH RESULT
+                    NO PRODUCTS
                 ====================================== */}
 
-                {searchQuery && filteredProducts.length === 0 ? (
+                {filteredProducts.length === 0 ? (
 
                     <div className="rounded-2xl border border-gray-100 bg-gray-50 py-20 text-center">
 
@@ -280,11 +345,34 @@ const Shop = () => {
 
                             <p className="mt-2 text-sm text-gray-500">
 
-                                We couldn't find any products matching
+                                {searchQuery ? (
 
-                                <span className="font-semibold text-gray-700">
-                                    {" "} "{searchQuery}"
-                                </span>
+                                    <>
+                                        We couldn't find any products
+                                        matching{" "}
+
+                                        <span className="font-semibold text-gray-700">
+                                            "{searchQuery}"
+                                        </span>
+                                    </>
+
+                                ) : categoryQuery ? (
+
+                                    <>
+                                        We couldn't find any products
+                                        in the{" "}
+
+                                        <span className="font-semibold text-gray-700 capitalize">
+                                            {categoryQuery}
+                                        </span>{" "}
+                                        category.
+                                    </>
+
+                                ) : (
+
+                                    "There are no products available right now."
+
+                                )}
 
                             </p>
 
@@ -304,17 +392,8 @@ const Shop = () => {
 
                     </div>
 
-                ) : filteredProducts.length === 0 ? (
-
-                    <div className="py-20 text-center">
-
-                        <p className="text-gray-500">
-                            No products found.
-                        </p>
-
-                    </div>
-
                 ) : (
+
 
                     /* ======================================
                         PRODUCTS
