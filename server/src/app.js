@@ -35,8 +35,6 @@ app.use(
     cors({
         origin: (origin, callback) => {
 
-            // Allow requests without origin
-            // Postman / server-to-server
             if (!origin) {
                 return callback(null, true);
             }
