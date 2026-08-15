@@ -19,7 +19,7 @@ const notificationRoutes=require('./routes/notificaton.routes.js')
 const contactRoutes = require("./routes/contact.routes");
 
 app.use(cors({
-    origin:'http://localhost:5173',
+    origin:'https://nova-cart-ai-weld.vercel.app',
     credentials:true
 }))
 
