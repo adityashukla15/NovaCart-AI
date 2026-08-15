@@ -173,6 +173,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
         .trim()
         .toLowerCase();
 
+    // ======================================
+    // FIND USER
+    // ======================================
+
     const user = await User.findOne({
         email: normalizedEmail,
     });
@@ -181,28 +185,97 @@ const forgotPassword = asyncHandler(async (req, res) => {
     if (!user) {
 
         return res.status(200).json(
-
             new ApiResponse(
                 200,
                 "If an account exists, an OTP has been sent"
             )
-
         );
 
     }
 
-    // Delete previous OTP
+    // ======================================
+    // OTP RATE LIMIT
+    // ======================================
+
+    const now = new Date();
+
+    // Last 60 seconds
+    const oneMinuteAgo = new Date(
+        now.getTime() - 60 * 1000
+    );
+
+    const recentOTP = await OTP.findOne({
+        email: normalizedEmail,
+        purpose: "forgot-password",
+        createdAt: {
+            $gte: oneMinuteAgo,
+        },
+    }).sort({
+        createdAt: -1,
+    });
+
+    if (recentOTP) {
+
+        const remainingSeconds = Math.ceil(
+            (
+                60 -
+                (now.getTime() - recentOTP.createdAt.getTime()) / 1000
+            )
+        );
+
+        throw new ApiError(
+            429,
+            `Please wait ${remainingSeconds} seconds before requesting another OTP`
+        );
+
+    }
+
+    // ======================================
+    // HOURLY RATE LIMIT
+    // ======================================
+
+    const oneHourAgo = new Date(
+        now.getTime() - 60 * 60 * 1000
+    );
+
+    const otpRequestsLastHour = await OTP.countDocuments({
+        email: normalizedEmail,
+        purpose: "forgot-password",
+        createdAt: {
+            $gte: oneHourAgo,
+        },
+    });
+
+    if (otpRequestsLastHour >= 5) {
+
+        throw new ApiError(
+            429,
+            "Too many OTP requests. Please try again later."
+        );
+
+    }
+
+    // ======================================
+    // DELETE PREVIOUS OTP
+    // ======================================
+
     await OTP.deleteMany({
         email: normalizedEmail,
         purpose: "forgot-password",
     });
 
-    // Generate 6 digit OTP
+    // ======================================
+    // GENERATE 6 DIGIT OTP
+    // ======================================
+
     const otp = Math.floor(
         100000 + Math.random() * 900000
     ).toString();
 
-    // OTP valid for 5 minutes
+    // ======================================
+    // OTP VALID FOR 5 MINUTES
+    // ======================================
+
     const expiresAt = new Date(
         Date.now() + 5 * 60 * 1000
     );
@@ -219,6 +292,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     });
 
+    // ======================================
+    // SEND EMAIL
+    // ======================================
+
     await sendEmail(
 
         normalizedEmail,
@@ -232,6 +309,10 @@ This OTP is valid for 5 minutes.
 If you did not request a password reset, please ignore this email.`
 
     );
+
+    // ======================================
+    // RESPONSE
+    // ======================================
 
     return res.status(200).json(
 
@@ -278,7 +359,10 @@ const verifyForgotPasswordOTP = asyncHandler(
             );
         }
 
-        // Check expiry
+        // ======================================
+        // CHECK EXPIRY
+        // ======================================
+
         if (
             new Date() >
             otpRecord.expiresAt
@@ -293,15 +377,60 @@ const verifyForgotPasswordOTP = asyncHandler(
 
         }
 
-        // Check OTP
-        if (otpRecord.otp !== otp.toString()) {
+        // ======================================
+        // MAX OTP ATTEMPTS
+        // ======================================
+
+        if (otpRecord.attempts >= 5) {
+
+            await otpRecord.deleteOne();
 
             throw new ApiError(
-                400,
-                "Invalid OTP"
+                429,
+                "Too many incorrect OTP attempts. Please request a new OTP."
             );
 
         }
+
+        // ======================================
+        // CHECK OTP
+        // ======================================
+
+        if (
+            otpRecord.otp !==
+            otp.toString()
+        ) {
+
+            otpRecord.attempts =
+                (otpRecord.attempts || 0) + 1;
+
+            await otpRecord.save();
+
+            const remainingAttempts =
+                5 - otpRecord.attempts;
+
+            if (remainingAttempts <= 0) {
+
+                await otpRecord.deleteOne();
+
+                throw new ApiError(
+                    429,
+                    "Too many incorrect OTP attempts. Please request a new OTP."
+                );
+
+            }
+
+            throw new ApiError(
+                400,
+                `Invalid OTP. ${remainingAttempts} attempt(s) remaining.`
+            );
+
+        }
+
+        // ======================================
+        // OTP VERIFIED
+        // ======================================
+
         otpRecord.verified = true;
 
         await otpRecord.save();
