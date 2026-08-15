@@ -12,7 +12,7 @@ const asyncHandler = require("../utils/asyncHandler")
 
  const register = asyncHandler(async (req, res) => {
 
-    const { name, email, password,role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
         throw new ApiError(400, "All fields are required");
@@ -30,7 +30,7 @@ const asyncHandler = require("../utils/asyncHandler")
         name,
         email,
         password: hashedPassword,
-        role: role || "user",
+        role: "user",
     });
 
     const token = jwt.sign(
