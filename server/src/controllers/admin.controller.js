@@ -4,6 +4,7 @@ const Category = require("../models/category.model");
 const Order = require("../models/order.model");
 const Review = require("../models/review.model");
 
+const ApiError = require("../utils/apiError");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/apiResponse");
 
