@@ -16,6 +16,7 @@ const reviewRoutes=require('../src/routes/review.routes.js')
 const aiRoutes=require('../src/routes/ai.routes.js')
 const adminRoutes=require('./routes/admin.routes.js')
 const notificationRoutes=require('./routes/notificaton.routes.js')
+const contactRoutes = require("./routes/contact.routes");
 
 app.use(cors({
     origin:'http://localhost:5173',
@@ -45,6 +46,7 @@ app.use('/api/reviews',reviewRoutes)
 app.use('/api/ai',aiRoutes)
 app.use('/api/admin',adminRoutes)
 app.use('/api/notifications',notificationRoutes)
+app.use("/api/contact", contactRoutes);
 
 app.use(errrorHandler)
 

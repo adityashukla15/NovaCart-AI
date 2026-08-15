@@ -6,6 +6,8 @@ import AuthLayout from "../layouts/AuthLayout";
 // Public / Main pages
 import Home from "../components/home/Home";
 import Shop from "../pages/Shop";
+import About from "../pages/About";
+import Contact from "../pages/Contact";
 import ProductDetail from "../components/product/ProductDetail";
 
 import Login from "../pages/Login";
@@ -181,7 +183,8 @@ const AppRoutes = () => {
                     </ProtectedRoute>
                 }
             />
-
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
 
             {/* ==================================================
                 CART
